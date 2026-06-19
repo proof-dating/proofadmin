@@ -27,7 +27,7 @@ jobs:
       - name: Checkout proofdesign for screenshots
         uses: actions/checkout@v4
         with:
-          repository: proof-dating/proofdesign
+          repository: ma-stevenson/proofdesign
           path: proofdesign
           token: ${{ secrets.GH_PAT }}
 
