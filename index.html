@@ -6,17 +6,35 @@
   <title>Proof Admin</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-    (function() {
+    (async function() {
       const sb = supabase.createClient(
-        "https://ltnmcufyscpryaqzpfyw.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0bm1jdWZ5c2NwcnlhcXpwZnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDgyMzYsImV4cCI6MjA4NzgyNDIzNn0.Ltq6_MENN18EzX5KpoUKRhyg6S8Jd5CJ4laNioYw82Q"
+        "https://lygrudsxpngsjlurjspc.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5Z3J1ZHN4cG5nc2psdXJqc3BjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4ODc4MjEsImV4cCI6MjA5NzQ2MzgyMX0.JI3Mr6hzw9lVB2QHXZ4QLWAqqAmgTSiFsAXJumqHrSo"
       );
-      const ALLOWED = "chainandrocket@gmail.com";
-      sb.auth.getSession().then(({ data: { session } }) => {
-        if (!session || session.user.email !== ALLOWED) {
-          window.location.href = "login.html";
+
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) { window.location.href = "login.html"; return; }
+
+      // Check proof-dating org membership (only needed once per browser session)
+      if (!sessionStorage.getItem("org_verified")) {
+        const providerToken = session.provider_token;
+        if (!providerToken) { await sb.auth.signOut(); window.location.href = "login.html"; return; }
+
+        const username = session.user.user_metadata?.preferred_username || session.user.user_metadata?.user_name;
+        const res = await fetch(`https://api.github.com/orgs/proof-dating/members/${username}`, {
+          headers: { Authorization: `Bearer ${providerToken}` }
+        });
+
+        if (res.status !== 204) {
+          await sb.auth.signOut();
+          window.location.href = "login.html?error=access_denied";
+          return;
         }
-      });
+        sessionStorage.setItem("org_verified", "1");
+      }
+
+      // Expose sb for sign-out
+      window.__adminSb = sb;
     })();
   </script>
   <style>
@@ -883,11 +901,8 @@
   renderFlows();
 
   async function handleSignOut() {
-    const sb = supabase.createClient(
-      "https://ltnmcufyscpryaqzpfyw.supabase.co",
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0bm1jdWZ5c2NwcnlhcXpwZnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDgyMzYsImV4cCI6MjA4NzgyNDIzNn0.Ltq6_MENN18EzX5KpoUKRhyg6S8Jd5CJ4laNioYw82Q"
-    );
-    await sb.auth.signOut();
+    sessionStorage.removeItem("org_verified");
+    if (window.__adminSb) await window.__adminSb.auth.signOut();
     window.location.href = "login.html";
   }
 </script>

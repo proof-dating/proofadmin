@@ -27,51 +27,27 @@
       gap: 24px;
       box-shadow: 0 24px 64px rgba(0,0,0,0.3);
     }
-    .logo {
-      font-size: 28px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-      color: #2D070D;
-      text-align: center;
-    }
+    .logo { font-size: 28px; font-weight: 800; letter-spacing: -0.04em; color: #2D070D; text-align: center; }
     .logo span { color: #B3304B; }
-    h1 {
-      font-size: 20px;
-      font-weight: 600;
-      color: #1E1E1E;
-      text-align: center;
-      margin-top: -8px;
-    }
-    .field { display: flex; flex-direction: column; gap: 6px; }
-    label { font-size: 14px; font-weight: 500; color: #5E1B27; }
-    input {
-      border: 1.5px solid #E5E7EB;
-      border-radius: 12px;
-      padding: 14px 16px;
-      font-family: 'Inter', sans-serif;
-      font-size: 16px;
-      color: #2D070D;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    input:focus { border-color: #B3304B; }
-    .error {
-      font-size: 14px;
-      color: #DC2626;
-      text-align: center;
-      min-height: 20px;
-    }
+    h1 { font-size: 20px; font-weight: 600; color: #1E1E1E; text-align: center; margin-top: -8px; }
+    p { font-size: 14px; color: #757575; text-align: center; margin-top: -8px; }
+    .error { font-size: 14px; color: #DC2626; text-align: center; min-height: 20px; }
     button {
-      background: #2C2C2C;
-      color: #F5F5F5;
+      background: #24292e;
+      color: #fff;
       border: none;
       border-radius: 12px;
       padding: 16px;
       font-family: 'Inter', sans-serif;
-      font-size: 17px;
-      font-weight: 400;
+      font-size: 16px;
+      font-weight: 500;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
       transition: opacity 0.15s;
+      width: 100%;
     }
     button:hover { opacity: 0.85; }
     button:disabled { opacity: 0.5; cursor: default; }
@@ -81,22 +57,9 @@
   <div class="card">
     <div class="logo">proof <span>admin</span></div>
     <h1>Sign in</h1>
-    <div class="field">
-      <label for="email">Email</label>
-      <input id="email" type="email" placeholder="you@example.com" autocomplete="email" />
-    </div>
-    <div class="field">
-      <label for="password">Password</label>
-      <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
-    </div>
+    <p>Access is restricted to proof-dating org members.</p>
     <div class="error" id="error"></div>
-    <button id="btn" onclick="handleLogin()">Sign in with email</button>
-    <div style="display:flex;align-items:center;gap:12px;margin:-8px 0">
-      <div style="flex:1;height:1px;background:#E5E7EB"></div>
-      <span style="font-size:13px;color:#9CA3AF">or</span>
-      <div style="flex:1;height:1px;background:#E5E7EB"></div>
-    </div>
-    <button id="github-btn" onclick="handleGitHub()" style="background:#24292e;display:flex;align-items:center;justify-content:center;gap:10px">
+    <button id="btn" onclick="handleGitHub()">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
       Sign in with GitHub
     </button>
@@ -104,63 +67,35 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-    const SUPABASE_URL  = "https://ltnmcufyscpryaqzpfyw.supabase.co";
-    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0bm1jdWZ5c2NwcnlhcXpwZnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDgyMzYsImV4cCI6MjA4NzgyNDIzNn0.Ltq6_MENN18EzX5KpoUKRhyg6S8Jd5CJ4laNioYw82Q";
-    const ALLOWED_EMAIL = "chainandrocket@gmail.com";
+    const ADMIN_URL  = "https://lygrudsxpngsjlurjspc.supabase.co";
+    const ADMIN_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx5Z3J1ZHN4cG5nc2psdXJqc3BjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4ODc4MjEsImV4cCI6MjA5NzQ2MzgyMX0.JI3Mr6hzw9lVB2QHXZ4QLWAqqAmgTSiFsAXJumqHrSo";
+    const ORG = "proof-dating";
 
-    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const sb = supabase.createClient(ADMIN_URL, ADMIN_ANON);
 
-    // If already logged in as the allowed user, go straight to admin
-    sb.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.email === ALLOWED_EMAIL) {
-        window.location.href = "index.html";
-      }
-    });
-
-    async function handleLogin() {
-      const email    = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const errorEl  = document.getElementById("error");
-      const btn      = document.getElementById("btn");
-
-      errorEl.textContent = "";
-      btn.disabled = true;
-      btn.textContent = "Signing in…";
-
-      const { data, error } = await sb.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        errorEl.textContent = error.message || "Sign in failed.";
-        btn.disabled = false;
-        btn.textContent = "Sign in";
-        return;
-      }
-
-      if (data?.user?.email !== ALLOWED_EMAIL) {
-        await sb.auth.signOut();
-        errorEl.textContent = "Access denied.";
-        btn.disabled = false;
-        btn.textContent = "Sign in";
-        return;
-      }
-
-      window.location.href = "index.html";
+    // Show error from redirect if present
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "access_denied") {
+      document.getElementById("error").textContent = "Your GitHub account is not a member of the proof-dating org.";
     }
+
+    // If already logged in, go straight to admin
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (session) window.location.href = "index.html";
+    });
 
     async function handleGitHub() {
-      const btn = document.getElementById("github-btn");
+      const btn = document.getElementById("btn");
       btn.disabled = true;
-      btn.textContent = "Redirecting…";
+      btn.innerHTML = "Redirecting…";
       await sb.auth.signInWithOAuth({
         provider: "github",
-        options: { redirectTo: window.location.origin + "/index.html" },
+        options: {
+          scopes: "read:org",
+          redirectTo: window.location.origin + "/index.html",
+        },
       });
     }
-
-    // Allow Enter key to submit
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") handleLogin();
-    });
   </script>
 </body>
 </html>
