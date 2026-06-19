@@ -120,13 +120,16 @@
 
       const { data, error } = await sb.auth.signInWithPassword({ email, password });
 
-      if (error || data?.user?.email !== ALLOWED_EMAIL) {
-        if (data?.user?.email !== ALLOWED_EMAIL) {
-          await sb.auth.signOut();
-          errorEl.textContent = "Access denied.";
-        } else {
-          errorEl.textContent = error?.message || "Sign in failed.";
-        }
+      if (error) {
+        errorEl.textContent = error.message || "Sign in failed.";
+        btn.disabled = false;
+        btn.textContent = "Sign in";
+        return;
+      }
+
+      if (data?.user?.email !== ALLOWED_EMAIL) {
+        await sb.auth.signOut();
+        errorEl.textContent = "Access denied.";
         btn.disabled = false;
         btn.textContent = "Sign in";
         return;
