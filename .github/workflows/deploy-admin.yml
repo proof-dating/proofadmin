@@ -5,20 +5,11 @@ on:
     branches: [main]
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  contents: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout admin repo
@@ -30,23 +21,18 @@ jobs:
           repository: ma-stevenson/proofdesign
           path: proofdesign
           token: ${{ secrets.GH_PAT }}
+        continue-on-error: true
 
       - name: Build site
         run: |
           mkdir -p _site
-          cp -r . _site/
-          rm -rf _site/.git _site/.github _site/proofdesign
+          cp -r $(ls -A | grep -v _site | grep -v proofdesign) _site/ 2>/dev/null || true
           mkdir -p _site/screenshots
           cp -r proofdesign/screenshots/. _site/screenshots/ 2>/dev/null || true
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to gh-pages branch
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          path: _site
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+          folder: _site
+          branch: gh-pages
+          clean: true
