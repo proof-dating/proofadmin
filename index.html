@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proof Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    (function() {
+      const sb = supabase.createClient(
+        "https://ltnmcufyscpryaqzpfyw.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0bm1jdWZ5c2NwcnlhcXpwZnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDgyMzYsImV4cCI6MjA4NzgyNDIzNn0.Ltq6_MENN18EzX5KpoUKRhyg6S8Jd5CJ4laNioYw82Q"
+      );
+      const ALLOWED = "chainandrocket@gmail.com";
+      sb.auth.getSession().then(({ data: { session } }) => {
+        if (!session || session.user.email !== ALLOWED) {
+          window.location.href = "login.html";
+        }
+      });
+    })();
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+      background: #F3F3F3;
+      color: #1E1E1E;
+      min-height: 100vh;
+    }
+
+    /* ── Tab bar ── */
+    .tab-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: #fff;
+      border-bottom: 1px solid #E5E5E5;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 0 32px;
+    }
+    .tab-bar-title {
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      padding-right: 32px;
+      border-right: 1px solid #E5E5E5;
+      margin-right: 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+    }
+    .tab {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #757575;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      user-select: none;
+      transition: color 0.15s;
+    }
+    .tab:hover { color: #1E1E1E; }
+    .tab.active { color: #1E1E1E; border-bottom-color: #1E1E1E; }
+
+    /* ── Tab panels ── */
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    /* ── Analytics panel ── */
+    #panel-analytics {
+      padding: 48px 32px 80px;
+    }
+    .container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 40px; }
+
+    .header { display: flex; flex-direction: column; gap: 4px; }
+    .header h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+    .header p { font-size: 14px; color: #757575; }
+
+    .stats { display: flex; flex-wrap: wrap; gap: 12px; }
+    .stat-card {
+      flex: 1;
+      min-width: 180px;
+      background: #fff;
+      border-radius: 8px;
+      border-bottom: 2px solid #1E1E1E;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-card .label { font-size: 12px; color: #757575; font-weight: 500; }
+    .stat-card .value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+    .stat-card .sub { font-size: 12px; color: #757575; }
+
+    .funnel-card {
+      background: #fff;
+      border-radius: 8px;
+      border-bottom: 1px solid #E5E5E5;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .funnel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #E5E5E5;
+    }
+    .funnel-header h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+    .funnel-header-right { text-align: right; display: flex; flex-direction: column; gap: 2px; }
+    .completion-rate { font-size: 14px; font-weight: 600; color: #8B1A31; }
+    .biggest-drop { font-size: 12px; color: #757575; }
+
+    .funnel-row { display: flex; flex-direction: column; gap: 6px; }
+    .funnel-row-header { display: flex; justify-content: space-between; align-items: flex-end; }
+    .funnel-row-label { font-size: 14px; font-weight: 600; }
+    .funnel-row-meta { display: flex; align-items: center; gap: 16px; }
+    .drop-label { font-size: 12px; color: #D32F2F; }
+    .no-drop { font-size: 12px; color: #B3B3B3; }
+    .count-label { font-size: 12px; color: #757575; text-align: right; min-width: 120px; }
+
+    .bar-track { height: 8px; background: #F0F0F0; border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+    .bar-high   { background: #1E1E1E; }
+    .bar-medium { background: #8B1A31; }
+    .bar-low    { background: #D32F2F; }
+
+    .footer { font-size: 12px; color: #B3B3B3; text-align: center; }
+
+    /* ── Design System panel ── */
+    #panel-design-system {
+      height: calc(100vh - 53px);
+    }
+    #panel-design-system iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ── Screenshots panel ── */
+    #panel-screenshots {
+      padding: 40px 32px 80px;
+    }
+    .screenshots-container { max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+
+    .flow-section { display: flex; flex-direction: column; gap: 16px; }
+    .flow-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #E5E5E5;
+    }
+    .flow-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .screenshot-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .screenshot-card img {
+      width: 130px;
+      height: 281px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid #E5E5E5;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .screenshot-card:hover img {
+      transform: scale(1.03);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .screenshot-label {
+      font-size: 11px;
+      color: #757575;
+      text-align: center;
+      text-transform: capitalize;
+    }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-height: 90vh;
+      max-width: 90vw;
+      border-radius: 16px;
+      object-fit: contain;
+    }
+    .lightbox-close {
+      position: fixed;
+      top: 24px;
+      right: 32px;
+      font-size: 32px;
+      color: #fff;
+      cursor: pointer;
+      line-height: 1;
+      user-select: none;
+    }
+    .lightbox-label {
+      position: fixed;
+      bottom: 32px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* ── Flows panel ── */
+    #panel-flows {
+      padding: 48px 32px 80px;
+    }
+    .flows-container { max-width: 960px; margin: 0 auto; display: flex; flex-direction: column; gap: 48px; }
+
+    .flows-header { display: flex; flex-direction: column; gap: 4px; }
+    .flows-header h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+    .flows-header p { font-size: 14px; color: #757575; }
+
+    .flow-group { display: flex; flex-direction: column; gap: 16px; }
+    .flow-group-title {
+      font-size: 18px; font-weight: 700; letter-spacing: -0.01em;
+      padding-bottom: 12px; border-bottom: 2px solid #1E1E1E;
+    }
+    .flow-screens { display: flex; flex-direction: column; gap: 2px; }
+
+    .screen-row {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      border: 1px solid #E5E5E5;
+      border-radius: 6px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .screen-row + .screen-row { margin-top: 6px; }
+
+    .screen-name {
+      padding: 14px 16px;
+      font-size: 13px; font-weight: 600;
+      background: #F8F8F8;
+      border-right: 1px solid #E5E5E5;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .screen-name .route {
+      font-size: 11px; font-weight: 400; color: #B3B3B3; font-family: monospace;
+    }
+    .screen-actions {
+      padding: 12px 16px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .action-row {
+      display: flex; align-items: baseline; gap: 8px; font-size: 13px;
+    }
+    .action-label {
+      font-weight: 500; color: #1E1E1E; flex-shrink: 0;
+    }
+    .action-arrow { color: #B3B3B3; flex-shrink: 0; font-size: 11px; }
+    .action-dest { color: #757575; font-family: monospace; font-size: 12px; }
+    .action-note { color: #757575; font-size: 12px; font-style: italic; }
+    .action-type {
+      display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 6px;
+      border-radius: 3px; flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .type-nav    { background: #E8F0FE; color: #1A56DB; }
+    .type-action { background: #FEF3C7; color: #92400E; }
+    .type-sheet  { background: #F0FDF4; color: #166534; }
+    .type-auth   { background: #FEE2E2; color: #991B1B; }
+    .type-back   { background: #F3F4F6; color: #6B7280; }
+  </style>
+</head>
+<body>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <div class="tab-bar-title">Proof</div>
+  <div class="tab active" data-tab="analytics">Analytics</div>
+  <div class="tab" data-tab="flows">Flows</div>
+  <div class="tab" data-tab="design-system">Design System</div>
+  <div class="tab" data-tab="screenshots">Screenshots</div>
+  <div style="margin-left:auto;display:flex;align-items:center;padding-right:8px">
+    <button onclick="handleSignOut()" style="background:none;border:none;font-size:13px;color:#757575;cursor:pointer;padding:8px 12px;border-radius:6px;font-family:inherit" onmouseover="this.style.color='#1E1E1E'" onmouseout="this.style.color='#757575'">Sign out</button>
+  </div>
+</div>
+
+<!-- Analytics panel -->
+<div id="panel-analytics" class="panel active">
+  <div class="container">
+    <div class="header">
+      <h1>Analytics</h1>
+      <p>User acquisition &amp; onboarding funnel · Mock data</p>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="funnel-card" id="account-setup-funnel"></div>
+    <div class="funnel-card" id="onboarding-funnel"></div>
+    <p class="footer">Data refreshes when connected to Supabase · Last updated: <span id="last-updated"></span></p>
+  </div>
+</div>
+
+<!-- Flows panel -->
+<div id="panel-flows" class="panel">
+  <div class="flows-container">
+    <div class="flows-header">
+      <h1>App Flows</h1>
+      <p>Every screen, button, and navigation action in the app</p>
+    </div>
+    <div id="flows-content"></div>
+  </div>
+</div>
+
+<!-- Design System panel -->
+<div id="panel-design-system" class="panel">
+  <iframe src="design-system.html" title="Design System"></iframe>
+</div>
+
+<!-- Screenshots panel -->
+<div id="panel-screenshots" class="panel">
+  <div class="screenshots-container" id="screenshots-container"></div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox">
+  <span class="lightbox-close" id="lightbox-close">&times;</span>
+  <img id="lightbox-img" src="" alt="" />
+  <div class="lightbox-label" id="lightbox-label"></div>
+</div>
+
+<script>
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+    });
+  });
+
+  // ── Analytics ─────────────────────────────────────────────────────────────
+  const TOTAL_SIGNUPS = 1284;
+
+  const ACCOUNT_SETUP = [
+    { screen: "Welcome",       count: 1284 },
+    { screen: "Email",         count: 1201 },
+    { screen: "Password",      count: 1138 },
+    { screen: "Name",          count: 1092 },
+    { screen: "Phone",         count: 1044 },
+    { screen: "Birthday",      count: 1011 },
+    { screen: "Location",      count:  978 },
+    { screen: "Notifications", count:  934 },
+    { screen: "Verify",        count:  891 },
+  ];
+
+  const ONBOARDING = [
+    { screen: "Gender",          count: 891 },
+    { screen: "Photos",          count: 854 },
+    { screen: "Photo Captions",  count: 812 },
+    { screen: "Prompts",         count: 779 },
+    { screen: "Prompt Answers",  count: 741 },
+    { screen: "Interests",       count: 718 },
+    { screen: "Lifestyle",       count: 694 },
+    { screen: "Looking For",     count: 671 },
+    { screen: "Partner Values",  count: 649 },
+    { screen: "Profile Preview", count: 631 },
+    { screen: "Begin Swiping",   count: 618 },
+  ];
+
+  function pct(n, total) { return ((n / total) * 100).toFixed(1) + "%"; }
+  function dropStr(current, prev) {
+    const dropped = prev - current;
+    if (dropped <= 0) return null;
+    return `−${dropped.toLocaleString()} (${((dropped / prev) * 100).toFixed(1)}% drop)`;
+  }
+  function barClass(w) { return w > 66 ? "bar-high" : w > 33 ? "bar-medium" : "bar-low"; }
+  function biggestDrop(rows) {
+    let worst = { screen: "", drop: 0 };
+    for (let i = 1; i < rows.length; i++) {
+      const d = rows[i-1].count - rows[i].count;
+      if (d > worst.drop) worst = { screen: rows[i].screen, drop: d };
+    }
+    return worst;
+  }
+
+  function renderStats() {
+    const accountDone = ACCOUNT_SETUP[ACCOUNT_SETUP.length - 1].count;
+    const onboardingDone = ONBOARDING[ONBOARDING.length - 1].count;
+    const cards = [
+      { label: "Total signups",             value: TOTAL_SIGNUPS.toLocaleString(), sub: null },
+      { label: "Account setup completion",  value: pct(accountDone, TOTAL_SIGNUPS), sub: accountDone.toLocaleString() + " users" },
+      { label: "Onboarding completion",     value: pct(onboardingDone, accountDone), sub: onboardingDone.toLocaleString() + " users" },
+      { label: "Overall funnel completion", value: pct(onboardingDone, TOTAL_SIGNUPS), sub: "signup → begin swiping" },
+    ];
+    document.getElementById("stats").innerHTML = cards.map(c => `
+      <div class="stat-card">
+        <div class="label">${c.label}</div>
+        <div class="value">${c.value}</div>
+        ${c.sub ? `<div class="sub">${c.sub}</div>` : ""}
+      </div>
+    `).join("");
+  }
+
+  function renderFunnel(containerId, title, rows, completionBase) {
+    const last = rows[rows.length - 1].count;
+    const drop = biggestDrop(rows);
+    const rowsHtml = rows.map((row, i) => {
+      const bw = (row.count / TOTAL_SIGNUPS) * 100;
+      const d = i === 0 ? null : dropStr(row.count, rows[i-1].count);
+      return `
+        <div class="funnel-row">
+          <div class="funnel-row-header">
+            <span class="funnel-row-label">${row.screen}</span>
+            <div class="funnel-row-meta">
+              ${i === 0 ? "" : d ? `<span class="drop-label">${d}</span>` : `<span class="no-drop">no drop</span>`}
+              <span class="count-label">${row.count.toLocaleString()} &middot; ${pct(row.count, TOTAL_SIGNUPS)}</span>
+            </div>
+          </div>
+          <div class="bar-track"><div class="bar-fill ${barClass(bw)}" style="width:${bw}%"></div></div>
+        </div>`;
+    }).join("");
+    document.getElementById(containerId).innerHTML = `
+      <div class="funnel-header">
+        <h2>${title}</h2>
+        <div class="funnel-header-right">
+          <span class="completion-rate">${pct(last, completionBase)} completion</span>
+          ${drop.screen ? `<span class="biggest-drop">Biggest drop: ${drop.screen} (−${drop.drop.toLocaleString()})</span>` : ""}
+        </div>
+      </div>
+      ${rowsHtml}`;
+  }
+
+  const accountDone = ACCOUNT_SETUP[ACCOUNT_SETUP.length - 1].count;
+  renderStats();
+  renderFunnel("account-setup-funnel", "Account Setup", ACCOUNT_SETUP, TOTAL_SIGNUPS);
+  renderFunnel("onboarding-funnel", "Onboarding", ONBOARDING, accountDone);
+  document.getElementById("last-updated").textContent = new Date().toLocaleString();
+
+  // ── Screenshots ────────────────────────────────────────────────────────────
+  // Locally screenshots live in ../proofdesign/screenshots; on GitHub Pages they're copied to screenshots/
+  const SCREENSHOT_BASE = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    ? "../proofdesign/screenshots"
+    : "screenshots";
+
+  const FLOWS = [
+    {
+      title: "Account Setup",
+      folder: "01_account-setup",
+      screens: ["01_welcome","02_login","03_email","04_password","05_name","06_phone","07_birthday","08_verify","09_location","10_notifications"],
+    },
+    {
+      title: "Onboarding",
+      folder: "02_onboarding",
+      screens: ["01_photos","02_photo-captions","03_prompts","04_prompt-answers","05_gender","06_lifestyle","07_interests","08_looking-for","09_partner-values","10_profile-preview","11_begin-swiping"],
+    },
+    {
+      title: "Main",
+      folder: "03_main",
+      screens: ["01_discover","02_chats","03_profile"],
+    },
+    {
+      title: "Chat",
+      folder: "04_chat",
+      screens: ["01_conversation"],
+    },
+    {
+      title: "Settings",
+      folder: "05_settings",
+      screens: ["01_match-preferences","02_match-preferences-tags","03_notifications","04_account","05_privacy-policy","06_settings-sheet","07_account-sheet","08_reset-password-sheet","09_reset-password-new-password","10_change-email-password","11_change-email-new-email","12_change-email-pending","13_change-email-confirmed","14_change-phone-password","15_change-phone-new-phone","16_change-phone-confirmed","17_delete-account-sheet"],
+    },
+    {
+      title: "Photo Editing",
+      folder: "06_photo-editing",
+      screens: ["01_photo-captions-edit","02_photos-select"],
+    },
+  ];
+
+  function formatLabel(name) {
+    return name.replace(/^\d+_/, "").replace(/-/g, " ");
+  }
+
+  const container = document.getElementById("screenshots-container");
+  FLOWS.forEach(flow => {
+    const section = document.createElement("div");
+    section.className = "flow-section";
+    const grid = flow.screens.map(s => `
+      <div class="screenshot-card" onclick="openLightbox('${SCREENSHOT_BASE}/${flow.folder}/${s}.png', '${flow.title} · ${formatLabel(s)}')">
+        <img src="${SCREENSHOT_BASE}/${flow.folder}/${s}.png" alt="${s}" loading="lazy" />
+        <div class="screenshot-label">${formatLabel(s)}</div>
+      </div>
+    `).join("");
+    section.innerHTML = `<div class="flow-title">${flow.title}</div><div class="flow-grid">${grid}</div>`;
+    container.appendChild(section);
+  });
+
+  // ── Lightbox ───────────────────────────────────────────────────────────────
+  function openLightbox(src, label) {
+    document.getElementById("lightbox-img").src = src;
+    document.getElementById("lightbox-label").textContent = label;
+    document.getElementById("lightbox").classList.add("open");
+  }
+  document.getElementById("lightbox-close").addEventListener("click", () => {
+    document.getElementById("lightbox").classList.remove("open");
+  });
+  document.getElementById("lightbox").addEventListener("click", e => {
+    if (e.target === e.currentTarget) document.getElementById("lightbox").classList.remove("open");
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") document.getElementById("lightbox").classList.remove("open");
+  });
+
+  // ── Flows ──────────────────────────────────────────────────────────────────
+  const FLOWS_DATA = [
+    {
+      group: "Account Setup",
+      screens: [
+        {
+          name: "Welcome", route: "/(account-setup)/welcome",
+          actions: [
+            { label: "Sign Up", type: "nav", dest: "/(account-setup)/email" },
+            { label: "Log In", type: "nav", dest: "/(account-setup)/login" },
+            { label: "Continue with Google", type: "auth", dest: "OAuth → /" },
+            { label: "Continue with Facebook", type: "auth", dest: "OAuth → /" },
+            { label: "Privacy Policy", type: "action", dest: "Opens external URL" },
+          ]
+        },
+        {
+          name: "Login", route: "/(account-setup)/login",
+          actions: [
+            { label: "Log In", type: "auth", dest: "/ (if onboarding complete) or /(onboarding-flow)/photos" },
+            { label: "Cancel", type: "back", dest: "/(account-setup)/welcome" },
+          ]
+        },
+        {
+          name: "Email", route: "/(account-setup)/email",
+          actions: [
+            { label: "Continue", type: "nav", dest: "/(account-setup)/password" },
+          ]
+        },
+        {
+          name: "Password", route: "/(account-setup)/password",
+          actions: [
+            { label: "Continue", type: "auth", dest: "/(account-setup)/name (creates Supabase auth user)" },
+          ]
+        },
+        {
+          name: "Name", route: "/(account-setup)/name",
+          actions: [
+            { label: "Continue", type: "nav", dest: "/(account-setup)/phone" },
+          ]
+        },
+        {
+          name: "Phone", route: "/(account-setup)/phone",
+          actions: [
+            { label: "Continue", type: "nav", dest: "/(account-setup)/birthday" },
+          ]
+        },
+        {
+          name: "Birthday", route: "/(account-setup)/birthday",
+          actions: [
+            { label: "Continue", type: "nav", dest: "/(account-setup)/location" },
+          ]
+        },
+        {
+          name: "Verify", route: "/(account-setup)/verify",
+          actions: [
+            { label: "Continue", type: "nav", dest: "/(account-setup)/birthday" },
+            { label: "Didn't get a code?", type: "action", dest: "Resends OTP via Supabase" },
+          ]
+        },
+        {
+          name: "Location", route: "/(account-setup)/location",
+          actions: [
+            { label: "Continue", type: "nav", dest: "/(account-setup)/notifications" },
+            { label: "Tap to retry", type: "action", dest: "Re-detects device location" },
+          ]
+        },
+        {
+          name: "Notifications", route: "/(account-setup)/notifications",
+          actions: [
+            { label: "Allow notifications", type: "nav", dest: "/(onboarding-flow)/photos (saves profile row)" },
+            { label: "Not now", type: "nav", dest: "/(onboarding-flow)/photos (saves profile row)" },
+          ]
+        },
+      ]
+    },
+    {
+      group: "Onboarding",
+      screens: [
+        {
+          name: "Photos", route: "/(onboarding-flow)/photos",
+          actions: [
+            { label: "Add photo (+ tiles)", type: "action", dest: "Opens image picker" },
+            { label: "Next", type: "nav", dest: "/(onboarding-flow)/photo-captions" },
+            { label: "Next (editing mode)", type: "nav", dest: "/(onboarding-flow)/photo-captions?editing=true" },
+          ]
+        },
+        {
+          name: "Photo Captions", route: "/(onboarding-flow)/photo-captions",
+          actions: [
+            { label: "Next", type: "nav", dest: "/(onboarding-flow)/prompts" },
+            { label: "Save (editing mode)", type: "nav", dest: "/profile (saves photos + captions to DB)" },
+            { label: "Select photos (editing mode)", type: "action", dest: "Opens /(onboarding-flow)/photos?editing=true" },
+          ]
+        },
+        {
+          name: "Prompts", route: "/(onboarding-flow)/prompts",
+          actions: [
+            { label: "Prompt chip (toggle)", type: "action", dest: "Selects/deselects prompt (max 3)" },
+            { label: "Next", type: "nav", dest: "/(onboarding-flow)/prompt-answers" },
+          ]
+        },
+        {
+          name: "Prompt Answers", route: "/(onboarding-flow)/prompt-answers",
+          actions: [
+            { label: "Next", type: "nav", dest: "/(onboarding-flow)/gender" },
+            { label: "Save (editing mode)", type: "nav", dest: "/profile (saves prompts to DB)" },
+            { label: "Change prompts", type: "back", dest: "/(onboarding-flow)/prompts" },
+            { label: "× remove prompt", type: "action", dest: "Removes prompt from selection" },
+          ]
+        },
+        {
+          name: "Gender", route: "/(onboarding-flow)/gender",
+          actions: [
+            { label: "Option chip (select)", type: "action", dest: "Selects gender" },
+            { label: "Next", type: "nav", dest: "/(onboarding-flow)/lifestyle" },
+          ]
+        },
+        {
+          name: "Lifestyle", route: "/(onboarding-flow)/lifestyle",
+          actions: [
+            { label: "Option chips (Smoking, Drinking, Education)", type: "action", dest: "Selects lifestyle values" },
+            { label: "Next", type: "nav", dest: "/(onboarding-flow)/interests" },
+            { label: "Save (editing mode)", type: "nav", dest: "/profile (saves lifestyle to DB)" },
+          ]
+        },
+        {
+          name: "Interests", route: "/(onboarding-flow)/interests",
+          actions: [
+            { label: "Interest chip (toggle)", type: "action", dest: "Selects/deselects interest" },
+            { label: "Next", type: "nav", dest: "/(onboarding-flow)/looking-for" },
+            { label: "Save (editing mode)", type: "nav", dest: "/profile (saves interests to DB)" },
+          ]
+        },
+        {
+          name: "Looking For", route: "/(onboarding-flow)/looking-for",
+          actions: [
+            { label: "Interested In chips", type: "action", dest: "Multi-select gender preference" },
+            { label: "Age range slider", type: "action", dest: "Sets min/max age" },
+            { label: "Relationship goal chips", type: "action", dest: "Multi-select relationship type" },
+            { label: "Next", type: "nav", dest: "/(onboarding-flow)/partner-values" },
+          ]
+        },
+        {
+          name: "Partner Values", route: "/(onboarding-flow)/partner-values",
+          actions: [
+            { label: "Value chip (toggle)", type: "action", dest: "Selects/deselects partner value" },
+            { label: "Next", type: "nav", dest: "/(onboarding-flow)/profile-preview" },
+            { label: "Save (editing mode)", type: "nav", dest: "/profile (saves partner values to DB)" },
+          ]
+        },
+        {
+          name: "Profile Preview", route: "/(onboarding-flow)/profile-preview",
+          actions: [
+            { label: "Swipe photo", type: "action", dest: "Advances photo carousel" },
+            { label: "Expand / collapse icon", type: "action", dest: "Toggles full-screen photo view" },
+            { label: "Edit photos button", type: "nav", dest: "/(onboarding-flow)/photos?editing=true" },
+            { label: "Edit Details pencil", type: "nav", dest: "/(onboarding-flow)/lifestyle" },
+            { label: "Edit Partner Values pencil", type: "nav", dest: "/(onboarding-flow)/partner-values" },
+            { label: "Edit Interests pencil", type: "nav", dest: "/(onboarding-flow)/interests" },
+            { label: "Edit Prompts pencil", type: "nav", dest: "/(onboarding-flow)/prompt-answers" },
+            { label: "Complete Profile", type: "nav", dest: "/ (saves all profile data to DB)" },
+          ]
+        },
+        {
+          name: "Begin Swiping", route: "/(onboarding-flow)/begin-swiping",
+          actions: [
+            { label: "Got it", type: "nav", dest: "/ (replace)" },
+          ]
+        },
+      ]
+    },
+    {
+      group: "Main App",
+      screens: [
+        {
+          name: "Discover (Home)", route: "/",
+          actions: [
+            { label: "Swipe right / Like button", type: "action", dest: "Sends like, shows heart animation" },
+            { label: "Swipe left / Dismiss button", type: "action", dest: "Dismisses profile" },
+            { label: "Feedback form (every 3 swipes)", type: "sheet", dest: "Opens rating + tag feedback sheet" },
+            { label: "Feedback → Submit", type: "action", dest: "Saves feedback to DB, closes sheet" },
+            { label: "Feedback → Cancel", type: "action", dest: "Closes feedback sheet" },
+          ]
+        },
+        {
+          name: "Chats", route: "/chats",
+          actions: [
+            { label: "Chat row", type: "nav", dest: "/chat/[id]" },
+          ]
+        },
+        {
+          name: "Profile", route: "/profile",
+          actions: [
+            { label: "Settings gear (header)", type: "sheet", dest: "Opens Settings sheet" },
+            { label: "Swipe photo", type: "action", dest: "Advances photo carousel" },
+            { label: "Expand / collapse icon", type: "action", dest: "Toggles full-screen photo view" },
+            { label: "Edit photos button", type: "nav", dest: "/(onboarding-flow)/photos?editing=true" },
+            { label: "Edit Details pencil", type: "nav", dest: "/(onboarding-flow)/lifestyle?editing=true" },
+            { label: "Edit Interests pencil", type: "nav", dest: "/(onboarding-flow)/interests?editing=true" },
+            { label: "Edit Partner Values pencil", type: "nav", dest: "/(onboarding-flow)/partner-values?editing=true" },
+            { label: "Edit Prompts pencil", type: "nav", dest: "/(onboarding-flow)/prompt-answers?editing=true" },
+            { label: "See more (caption)", type: "action", dest: "Expands full caption text" },
+          ]
+        },
+        {
+          name: "Conversation", route: "/chat/[id]",
+          actions: [
+            { label: "Back arrow", type: "back", dest: "/chats" },
+            { label: "⋮ menu", type: "sheet", dest: "Opens action menu (Block / Unmatch / Report / Send feedback)" },
+            { label: "Block", type: "action", dest: "Confirmation → blocks user" },
+            { label: "Unmatch", type: "action", dest: "Confirmation → removes match" },
+            { label: "Report", type: "sheet", dest: "Opens report reason selector → Submit" },
+            { label: "Send feedback", type: "sheet", dest: "Opens rating + tag feedback sheet" },
+            { label: "Send (message)", type: "action", dest: "Sends message via Supabase" },
+          ]
+        },
+        {
+          name: "User Profile", route: "/user/[id]",
+          actions: [
+            { label: "Back arrow", type: "back", dest: "Previous screen" },
+            { label: "Like button", type: "action", dest: "Sends like" },
+            { label: "Dismiss button", type: "action", dest: "Dismisses profile" },
+            { label: "Swipe photo", type: "action", dest: "Advances photo carousel" },
+          ]
+        },
+      ]
+    },
+    {
+      group: "Settings Sheets",
+      screens: [
+        {
+          name: "Settings Sheet", route: "/profile → gear icon",
+          actions: [
+            { label: "Match Preferences", type: "sheet", dest: "Opens Match Preferences sheet" },
+            { label: "Notifications", type: "sheet", dest: "Opens Notifications sheet" },
+            { label: "Privacy Policy", type: "sheet", dest: "Opens Privacy Policy sheet" },
+            { label: "Account Settings", type: "sheet", dest: "Opens Account sheet" },
+            { label: "Log out", type: "auth", dest: "Log out confirmation → signs out → /(account-setup)/welcome" },
+            { label: "← Back", type: "back", dest: "Closes sheet" },
+            { label: "× Close", type: "back", dest: "Closes sheet" },
+          ]
+        },
+        {
+          name: "Match Preferences Sheet", route: "Settings → Match Preferences",
+          actions: [
+            { label: "Interested In chips", type: "action", dest: "Multi-select gender preference" },
+            { label: "Age range slider", type: "action", dest: "Sets min/max age" },
+            { label: "Relationship goal chips", type: "action", dest: "Multi-select relationship type" },
+            { label: "Save", type: "action", dest: "Saves preferences to DB, closes sheet" },
+            { label: "← Back", type: "back", dest: "Closes sheet" },
+            { label: "× Close", type: "back", dest: "Closes sheet" },
+          ]
+        },
+        {
+          name: "Notifications Sheet", route: "Settings → Notifications",
+          actions: [
+            { label: "New matches toggle", type: "action", dest: "Saves notification preference to DB" },
+            { label: "New messages toggle", type: "action", dest: "Saves notification preference to DB" },
+            { label: "← Back", type: "back", dest: "Settings sheet" },
+            { label: "× Close", type: "back", dest: "Closes all sheets" },
+          ]
+        },
+        {
+          name: "Account Sheet", route: "Settings → Account Settings",
+          actions: [
+            { label: "Location row", type: "nav", dest: "/(account-setup)/location" },
+            { label: "Email row (email auth only)", type: "sheet", dest: "Opens Change Email sheet" },
+            { label: "Phone number row", type: "sheet", dest: "Opens Change Phone sheet" },
+            { label: "Reset password", type: "sheet", dest: "Opens Reset Password sheet" },
+            { label: "Delete Account", type: "action", dest: "Closes account sheet → opens Delete Account confirmation" },
+            { label: "Log out", type: "auth", dest: "Log out confirmation → signs out → /(account-setup)/welcome" },
+            { label: "← Back", type: "back", dest: "Settings sheet" },
+            { label: "× Close", type: "back", dest: "Closes all sheets" },
+          ]
+        },
+        {
+          name: "Reset Password Sheet", route: "Account → Reset password",
+          actions: [
+            { label: "Send reset link (step 1)", type: "auth", dest: "Supabase sends password reset email" },
+            { label: "Save password (step 2)", type: "auth", dest: "Updates password via Supabase, closes sheet" },
+            { label: "← Back", type: "back", dest: "Account sheet" },
+            { label: "× Close", type: "back", dest: "Closes all sheets" },
+          ]
+        },
+        {
+          name: "Change Email Sheet", route: "Account → Email row",
+          actions: [
+            { label: "Continue (step 1 — password)", type: "auth", dest: "Verifies current password via Supabase signIn" },
+            { label: "Send verification link (step 2 — new email)", type: "auth", dest: "Calls supabase.auth.updateUser({ email }) — sends confirmation to new address" },
+            { label: "Done (confirmed state)", type: "back", dest: "Closes sheet (auto-dismisses after 3s on USER_UPDATED event)" },
+            { label: "← Back", type: "back", dest: "Previous step / Account sheet" },
+            { label: "× Close", type: "back", dest: "Closes all sheets" },
+          ]
+        },
+        {
+          name: "Change Phone Sheet", route: "Account → Phone row",
+          actions: [
+            { label: "Continue (step 1 — password)", type: "auth", dest: "Verifies current password via Supabase signIn" },
+            { label: "Save (step 2 — new phone)", type: "action", dest: "Updates profiles.phone in DB" },
+            { label: "Done (confirmed state)", type: "back", dest: "Closes sheet (auto-dismisses after 3s)" },
+            { label: "← Back", type: "back", dest: "Previous step / Account sheet" },
+            { label: "× Close", type: "back", dest: "Closes all sheets" },
+          ]
+        },
+        {
+          name: "Delete Account Confirmation", route: "Account → Delete Account",
+          actions: [
+            { label: "Delete account", type: "auth", dest: "Verifies password → deletes profile_photos, profiles rows → calls delete-user edge function → signs out → /(account-setup)/welcome" },
+            { label: "Cancel", type: "back", dest: "Closes confirmation" },
+          ]
+        },
+        {
+          name: "Privacy Policy Sheet", route: "Settings → Privacy Policy",
+          actions: [
+            { label: "← Back", type: "back", dest: "Settings sheet" },
+            { label: "× Close", type: "back", dest: "Closes all sheets" },
+          ]
+        },
+      ]
+    },
+  ];
+
+  const TYPE_LABELS = { nav: "Navigate", action: "Action", sheet: "Sheet", auth: "Auth", back: "Back" };
+
+  function renderFlows() {
+    const container = document.getElementById("flows-content");
+    container.innerHTML = FLOWS_DATA.map(group => `
+      <div class="flow-group" style="margin-bottom: 48px;">
+        <div class="flow-group-title">${group.group}</div>
+        <div class="flow-screens">
+          ${group.screens.map(screen => `
+            <div class="screen-row">
+              <div class="screen-name">
+                ${screen.name}
+                <span class="route">${screen.route}</span>
+              </div>
+              <div class="screen-actions">
+                ${screen.actions.map(a => `
+                  <div class="action-row">
+                    <span class="action-type type-${a.type}">${TYPE_LABELS[a.type]}</span>
+                    <span class="action-label">${a.label}</span>
+                    <span class="action-arrow">→</span>
+                    <span class="action-dest">${a.dest}</span>
+                  </div>
+                `).join("")}
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `).join("");
+  }
+
+  renderFlows();
+
+  async function handleSignOut() {
+    const sb = supabase.createClient(
+      "https://ltnmcufyscpryaqzpfyw.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0bm1jdWZ5c2NwcnlhcXpwZnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDgyMzYsImV4cCI6MjA4NzgyNDIzNn0.Ltq6_MENN18EzX5KpoUKRhyg6S8Jd5CJ4laNioYw82Q"
+    );
+    await sb.auth.signOut();
+    window.location.href = "login.html";
+  }
+</script>
+</body>
+</html>
