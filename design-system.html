@@ -1,0 +1,2154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proof Design System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Brand */
+      --brand-100: #FFF8FA; --brand-200: #FFEBF2; --brand-300: #FFBDD3;
+      --brand-400: #F782AA; --brand-500: #DA4570; --brand-600: #B3304B;
+      --brand-700: #5E1B27; --brand-800: #2D070D;
+      /* Gray */
+      --gray-100: #F9FAFB; --gray-200: #F3F4F6; --gray-300: #E5E7EB;
+      --gray-400: #D1D5DB; --gray-500: #9CA3AF; --gray-600: #6B7280;
+      --gray-700: #4B5563; --gray-800: #374151; --gray-900: #1F2937;
+      /* Red / Green / Yellow */
+      --red-100:#FEF2F2; --red-200:#FEE2E2; --red-300:#FECACA;
+      --red-600:#EF4444; --red-700:#DC2626; --red-800:#B91C1C;
+      --green-100:#F0FDF4; --green-600:#22C55E; --green-700:#16A34A;
+      --yellow-100:#FEFCE8; --yellow-500:#FACC15; --yellow-800:#A16207; --yellow-900:#713F12;
+      /* Semantic */
+      --text-primary: #1E1E1E; --text-secondary: #757575;
+      --border: #D9D9D9; --bg: #F3F3F3;
+      /* Fonts */
+      --sans: 'Inter', sans-serif; --serif: 'Noto Serif', serif; --mono: 'Roboto Mono', monospace;
+    }
+
+    body { font-family: var(--sans); background: var(--bg); color: var(--text-primary); }
+
+    /* Input/Textarea placeholder = gray[500] #9CA3AF */
+    .input-wrap input::placeholder,
+    .ta-wrap textarea::placeholder { color: #9CA3AF; font-style: italic; }
+    /* DateInput placeholder = main.light #F782AA */
+    .date-seg input::placeholder { color: #F782AA; font-style: italic; }
+    /* Has-value: not italic */
+    .input-wrap input.has-value,
+    .ta-wrap textarea.has-value,
+    .date-seg input.has-value { font-style: normal; color: #2D070D; }
+
+    /* ── Layout ── */
+    .layout { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 200px; min-width: 200px;
+      background: #fff; border-right: 1px solid var(--border);
+      padding: 24px 0; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+    .sidebar-logo {
+      font-size: 17px; font-weight: 800; letter-spacing: -0.02em;
+      padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 12px;
+    }
+    .sidebar-logo span { color: var(--brand-600); }
+    .nav-group { font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--gray-500); padding: 10px 20px 2px; }
+    .nav-item { display: block; padding: 6px 20px; font-size: 13px;
+      color: var(--text-secondary); text-decoration: none; cursor: pointer;
+      transition: color .1s, background .1s; border-radius: 0; }
+    .nav-item:hover { color: var(--text-primary); background: var(--gray-100); }
+    .nav-item.active { color: var(--brand-600); font-weight: 600; background: var(--brand-100); }
+
+    .content { flex: 1; padding: 48px 56px 120px; max-width: 980px; }
+
+    /* ── Section ── */
+    .section { margin-bottom: 72px; scroll-margin-top: 24px; }
+    .section-title {
+      font-size: 26px; font-weight: 800; letter-spacing: -0.02em;
+      padding-bottom: 14px; margin-bottom: 28px; border-bottom: 1px solid var(--border);
+    }
+    .sub { margin-bottom: 36px; }
+    .sub-title { font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--gray-500); margin-bottom: 14px; }
+
+    /* ── Utility ── */
+    .row  { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .col  { display: flex; flex-direction: column; gap: 8px; }
+    .note { font-size: 11px; color: var(--gray-400); margin-top: 6px; font-family: var(--mono); }
+    .on-dark { background: #1a1a1a; border-radius: 12px; padding: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+    /* ══════════════════════════════════════════
+       COLORS
+    ══════════════════════════════════════════ */
+    .swatch-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .swatch { display: flex; flex-direction: column; gap: 5px; width: 68px; }
+    .swatch-box { width: 68px; height: 44px; border-radius: 6px; border: 1px solid rgba(0,0,0,0.06); }
+    .swatch-name { font-size: 10px; color: var(--gray-600); }
+    .swatch-hex  { font-size: 9px; color: var(--gray-400); font-family: var(--mono); }
+
+    /* ══════════════════════════════════════════
+       TYPOGRAPHY
+    ══════════════════════════════════════════ */
+    .type-row { display: flex; align-items: baseline; gap: 20px;
+      padding: 14px 0; border-bottom: 1px solid var(--gray-200); }
+    .type-row:last-child { border-bottom: none; }
+    .type-meta { min-width: 180px; flex-shrink: 0; }
+    .type-meta-name { font-size: 12px; font-weight: 700; }
+    .type-meta-spec { font-size: 10px; color: var(--gray-500); font-family: var(--mono); margin-top: 2px; }
+
+    /* ══════════════════════════════════════════
+       BUTTON — exact match to Button.tsx
+    ══════════════════════════════════════════ */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: var(--sans); cursor: default; white-space: nowrap;
+      border: none; outline: none;
+    }
+    /* sizes */
+    .btn-sm { padding: 8px 16px;  font-size: 13px; border-radius: 8px;  font-weight: 600; letter-spacing: 0.3px; }
+    .btn-md { padding: 12px 12px; font-size: 16px; border-radius: 8px;  font-weight: 600; letter-spacing: 0.3px; }
+    .btn-lg { padding: 16px 32px; font-size: 17px; border-radius: 12px; font-weight: 400; letter-spacing: 0; }
+    /* variants */
+    .btn-primary         { background:#2C2C2C; color:#F5F5F5; border:1px solid #2C2C2C; font-weight:400; letter-spacing:0; }
+    .btn-primaryOnDark   { background:#F5F5F5; color:#2C2C2C; border:1px solid #F5F5F5; font-weight:600; letter-spacing:0.3px; }
+    .btn-secondary       { background:transparent; color:var(--text-primary); border:1px solid var(--border); }
+    .btn-outline         { background:transparent; color:#DA4570; border:1.5px solid #DA4570; }
+    .btn-ghost           { background:transparent; color:#DA4570; }
+    .btn-destructive     { background:#FEE2E2; color:#DC2626; }
+    .btn-dangerPrimary   { background:#DC2626; color:#F5F5F5; border:1px solid #DC2626; }
+    .btn-dangerSecondary { background:transparent; color:#DC2626; border:1px solid #DC2626; }
+    .btn-white           { background:#FFFFFF; color:#1E1E1E; border:1px solid #FFFFFF; }
+    .btn-link            { background:transparent; color:#1E1E1E; font-weight:600; font-size:16px; letter-spacing:0; }
+    .btn-linkOnDark      { background:transparent; color:#fff; font-weight:600; font-size:16px; letter-spacing:0; }
+    .btn-neutralFilled   { background:#F5F5F5; color:#1E1E1E; border:1px solid #767676; font-weight:700; letter-spacing:0.3px; }
+    .btn-disabled        { background:#D9D9D9 !important; color:#B3B3B3 !important; border-color:#B3B3B3 !important; font-weight:400; }
+    .pv { display:flex; flex-direction:column; align-items:flex-start; gap:4px; }
+    .pv-label { font-size:10px; color:var(--gray-400); text-align:center; align-self:center; }
+
+    /* ══════════════════════════════════════════
+       INPUT / INPUTFIELD — exact match to Input.tsx
+    ══════════════════════════════════════════ */
+    /* Input.tsx: gray-300 border, main.xdark (#2D070D) text, gray[500] placeholder, italic when empty */
+    .input-wrap {
+      display:flex; align-items:center;
+      border:1.5px solid #E5E7EB; border-radius:14px;
+      background:#fff; padding:0 16px; width:280px;
+    }
+    .input-wrap input {
+      flex:1; padding:16px 0; font-family:var(--sans); font-size:16px;
+      border:none; outline:none; background:transparent; color:#2D070D;
+      font-style:italic;
+    }
+    .input-wrap input.has-value { font-style:normal; }
+    .input-wrap.invalid { border-color:#DC2626; }
+    /* InputField: label = main.dark (#5E1B27) Inter 500 bodySmall(14px), desc = gray[500], err = red-700 (#DC2626) */
+    .input-field-label { font-size:14px; font-weight:500; color:#5E1B27; margin-bottom:2px; }
+    .input-field-desc  { font-size:14px; color:#9CA3AF; margin-bottom:4px; }
+    .input-field-err   { font-size:14px; color:#DC2626; margin-top:4px; }
+    .show-hide { font-size:14px; font-weight:500; color:#B3304B; cursor:default; user-select:none; }
+
+    /* ══════════════════════════════════════════
+       TEXTAREA — exact match to Textarea.tsx
+       gray-300 border, main.xdark text, paddingV:14, italic when empty
+    ══════════════════════════════════════════ */
+    .ta-wrap {
+      border:1.5px solid #E5E7EB; border-radius:14px;
+      background:#fff; padding:14px 16px; width:280px;
+    }
+    .ta-wrap textarea {
+      width:100%; font-family:var(--sans); font-size:16px;
+      border:none; outline:none; background:transparent;
+      resize:none; color:#2D070D; font-style:italic; min-height:96px;
+    }
+    .ta-wrap textarea.has-value { font-style:normal; }
+
+    /* ══════════════════════════════════════════
+       DATE INPUT — exact match to DateInput.tsx
+    ══════════════════════════════════════════ */
+    /* DateInput.tsx: border = main.xlight (#FFBDD3), placeholder = main.light (#F782AA), text = main.xdark (#2D070D) */
+    .date-wrap {
+      display:flex; align-items:center;
+      border:1.5px solid #FFBDD3; border-radius:14px;
+      background:#fff; width:280px; overflow:hidden;
+    }
+    .date-seg { display:flex; align-items:center; justify-content:center; }
+    .date-seg input {
+      padding:16px 0; text-align:center; font-family:var(--sans); font-size:16px;
+      border:none; outline:none; background:transparent; color:#2D070D;
+      font-style:italic;
+    }
+    .date-seg input.has-value { font-style:normal; }
+    .date-divider { width:1px; background:#FFBDD3; align-self:stretch; margin:10px 0; }
+    .date-wrap.error { border-color:#DC2626; }
+    .date-wrap.error .date-divider { background:#DC2626; }
+
+    /* ══════════════════════════════════════════
+       SWITCH — exact match to Toggle.tsx
+    ══════════════════════════════════════════ */
+    /* Toggle.tsx (Switch): track 44×24 radius:12, thumb 20×20 white shadow,
+       off: track=#E5E7EB thumb left:2, on: track=main.DEFAULT (#DA4570) thumb left:22
+       label=bodySmall Inter500 14px, desc=bodySmall gray[500] 14px */
+    .sw-track {
+      width:44px; height:24px; border-radius:12px;
+      position:relative; flex-shrink:0; transition:background .18s;
+    }
+    .sw-off { background:#E5E7EB; }
+    .sw-on  { background:#DA4570; }
+    .sw-thumb {
+      position:absolute; width:20px; height:20px; border-radius:10px; background:#fff;
+      box-shadow:0 1px 2px rgba(0,0,0,0.2); top:2px; transition:left .18s;
+    }
+    .sw-off .sw-thumb { left:2px; }
+    .sw-on  .sw-thumb { left:22px; }
+    .sw-row { display:flex; align-items:flex-start; gap:10px; }
+    .sw-label { font-size:14px; font-weight:500; color:#2D070D; }
+    .sw-desc  { font-size:14px; color:#9CA3AF; margin-top:2px; }
+
+    /* ══════════════════════════════════════════
+       CHECKBOX — exact match to Checkbox.tsx
+    ══════════════════════════════════════════ */
+    /* Checkbox.tsx: box 20×20 radius:5 border:1.5 gray[300], checked=main.DEFAULT (#DA4570) bg+border
+       check = ✓ text 11px Inter700 white, indeterminate = 10×2 white dash
+       label=bodySmall Inter500 14px, desc=bodySmall gray[500] 14px, gap:10, marginTop:1 on box */
+    .cb-box {
+      width:20px; height:20px; border-radius:5px; border:1.5px solid #E5E7EB;
+      display:flex; align-items:center; justify-content:center; background:#fff; flex-shrink:0; margin-top:1px;
+    }
+    .cb-box.checked       { background:#DA4570; border-color:#DA4570; }
+    .cb-box.indeterminate { background:#DA4570; border-color:#DA4570; }
+    .cb-check { font-size:11px; font-weight:700; color:#fff; line-height:13px; }
+    .cb-dash  { width:10px; height:2px; background:#fff; border-radius:1px; }
+    .cb-row { display:flex; align-items:flex-start; gap:10px; }
+    .cb-label { font-size:14px; font-weight:500; color:#2D070D; }
+    .cb-desc  { font-size:14px; color:#9CA3AF; margin-top:2px; }
+
+    /* ══════════════════════════════════════════
+       RADIO — exact match to RadioGroup.tsx
+    ══════════════════════════════════════════ */
+    /* RadioGroup.tsx: circle 20×20 radius:50% border:1.5 gray[300], selected=border main.DEFAULT (#DA4570)
+       dot 10×10 solid #DA4570, label=bodySmall Inter500 14px, desc=bodySmall gray[500] 14px, gap:10 */
+    .rb-circle {
+      width:20px; height:20px; border-radius:50%; border:1.5px solid #E5E7EB;
+      display:flex; align-items:center; justify-content:center; background:#fff; flex-shrink:0; margin-top:1px;
+    }
+    .rb-circle.selected { border-color:#DA4570; }
+    .rb-dot { width:10px; height:10px; border-radius:50%; background:#DA4570; }
+    .rb-row { display:flex; align-items:flex-start; gap:10px; }
+    .rb-label { font-size:14px; font-weight:500; color:#2D070D; }
+    .rb-desc  { font-size:14px; color:#9CA3AF; margin-top:2px; }
+
+    /* ══════════════════════════════════════════
+       RANGE SLIDER — exact match to RangeSlider.tsx
+    ══════════════════════════════════════════ */
+    /* RangeSlider.tsx: labels above (bodySmallStrong = Inter 600 14px, text.primary #1E1E1E),
+       track container height:44 (touch target), margin:10px, active = main.medium (#B3304B),
+       thumbs: 20×20 solid #B3304B circles, no border, margin-left:-10 */
+    .slider-wrap { width:280px; padding:0 10px; gap:8px; display:flex; flex-direction:column; }
+    .slider-labels { position:relative; height:20px; margin:0 10px; }
+    .slider-label { font-size:14px; font-weight:600; color:#1E1E1E; position:absolute; }
+    .slider-track { position:relative; height:44px; display:flex; align-items:center; margin:0 10px; }
+    .slider-rail  { position:absolute; left:0; right:0; height:4px; border-radius:2px; background:#D9D9D9; }
+    .slider-range { position:absolute; height:4px; border-radius:2px; background:#B3304B; }
+    .slider-thumb {
+      position:absolute; width:20px; height:20px; border-radius:10px;
+      background:#B3304B; margin-left:-10px;
+    }
+
+    /* ══════════════════════════════════════════
+       TAG — exact match to Tag.tsx
+    ══════════════════════════════════════════ */
+    /* Tag.tsx: borderRadius:100, paddingH:10, paddingV:4, fontSize:14 (bodySmall) */
+    .tag {
+      display:inline-flex; align-items:center; gap:4px;
+      border-radius:100px; padding:4px 10px; font-size:14px; white-space:nowrap; align-self:flex-start;
+    }
+    /* 5 schemes × 2 variants from schemeTokens */
+    .tag-brand-p  { background:#DA4570; color:#fff; }
+    .tag-brand-s  { background:#FFEBF2; color:#DA4570; }
+    .tag-danger-p { background:#EF4444; color:#fff; }
+    .tag-danger-s { background:#FEF2F2; color:#DC2626; }
+    .tag-pos-p    { background:#22C55E; color:#fff; }
+    .tag-pos-s    { background:#F0FDF4; color:#16A34A; }
+    .tag-warn-p   { background:#FACC15; color:#713F12; }
+    .tag-warn-s   { background:#FEFCE8; color:#A16207; }
+    .tag-neut-p   { background:#4B5563; color:#fff; }
+    .tag-neut-s   { background:#F9FAFB; color:#4B5563; }
+    /* TagToggle.tsx: borderRadius:8, padding:8, fontSize:16 (body), icon slot gap:8 */
+    .tag-toggle {
+      display:inline-flex; align-items:center; gap:8px;
+      border-radius:8px; padding:8px; font-size:16px; line-height:16px; white-space:nowrap;
+      border:1px solid #D9D9D9; background:#F5F5F5; color:#2C2C2C; cursor:default;
+    }
+    .tag-toggle.sel { background:#2C2C2C; color:#F3F3F3; border-color:transparent; }
+    /* TagGhost.tsx: for dark/blur backgrounds */
+    .tag-ghost {
+      display:inline-flex; align-items:center; gap:8px;
+      border-radius:8px; padding:8px; font-size:16px; line-height:16px; white-space:nowrap;
+      border:1px solid rgba(255,255,255,0.35); background:transparent; color:#fff; cursor:default;
+    }
+    .tag-ghost.sel { background:#fff; color:#1E1E1E; border-color:#fff; }
+
+    /* ══════════════════════════════════════════
+       ACCORDION — exact match to Accordion.tsx
+    ══════════════════════════════════════════ */
+    .accordion { border-top:1px solid var(--gray-200); max-width:360px; }
+    .acc-item { border-bottom:1px solid var(--gray-200); }
+    .acc-header {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:16px 0; cursor:default;
+    }
+    /* Accordion.tsx: title=bodyStrong Inter600 16px #1E1E1E, arrow=body 12px gray[500] #9CA3AF, body paddingBottom:16 */
+    .acc-title { font-size:16px; font-weight:600; color:#2D070D; }
+    .acc-arrow { font-size:12px; color:#9CA3AF; transition:transform .2s; }
+    .acc-arrow.open { transform:rotate(180deg); }
+    .acc-body { padding-bottom:16px; font-size:14px; color:#6B7280; line-height:1.4; }
+
+    /* ══════════════════════════════════════════
+       AVATAR — exact match to Avatar.tsx
+    ══════════════════════════════════════════ */
+    /* Avatar.tsx: bg=main.xlight (#FFBDD3), border:2px solid main.light (#F782AA), radius=dim/2
+       initials: bold color=main.dark (#5E1B27), fontSize varies by size */
+    .avatar {
+      border-radius:50%; background:#FFBDD3;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden; border:2px solid #F782AA; flex-shrink:0;
+    }
+    .avatar img { width:100%; height:100%; object-fit:cover; }
+    .avatar-initials { font-weight:700; color:#5E1B27; }
+
+    /* ══════════════════════════════════════════
+       NOTIFICATION — exact match to Notification.tsx
+    ══════════════════════════════════════════ */
+    /* Notification.tsx: padding:14, radius:12, gap:10
+       message: bg=main.xxlight (#FFEBF2), border=main.xlight (#FFBDD3), text=main.dark (#5E1B27)
+       alert:   bg=red[100] (#FEF2F2), border=red[300] (#FECACA), text=red[700] (#DC2626)
+       dismiss = bodySmallStrong Inter600 14px same text color */
+    .notif {
+      display:flex; align-items:flex-start; gap:10px;
+      padding:14px; border-radius:12px; border-width:1px; border-style:solid; max-width:360px;
+    }
+    .notif-message { background:#FFEBF2; border-color:#FFBDD3; }
+    .notif-alert   { background:#FEF2F2; border-color:#FECACA; }
+    .notif-text-message { font-size:14px; color:#5E1B27; line-height:19.6px; }
+    .notif-text-alert   { font-size:14px; color:#DC2626; line-height:19.6px; }
+    .notif-dismiss { font-size:14px; font-weight:600; cursor:default; margin-left:auto; }
+
+    /* ══════════════════════════════════════════
+       INFO CARD — exact match to InfoCard.tsx
+    ══════════════════════════════════════════ */
+    /* InfoCard.tsx: bg=main.offwhite (#FFF8FA), radius:8, padding:16, gap:12
+       zap SVG 20×20 fill+stroke main.medium (#B3304B)
+       title = bodyStrong Inter600 16px main.medium, desc = bodySmall 14px gray[700] (#4B5563)
+       dismiss = SVG X 25.45×25.45 stroke #757575 strokeWidth 2.545 */
+    .info-card {
+      display:flex; align-items:flex-start; gap:12px;
+      background:#FFF8FA; border-radius:8px; padding:16px; max-width:360px;
+    }
+    .info-title { font-size:16px; font-weight:600; color:#B3304B; line-height:22.4px; }
+    .info-desc  { font-size:14px; color:#4B5563; line-height:19.6px; margin-top:4px; }
+    .info-x     { width:32px; height:32px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-left:auto; cursor:default; }
+
+    /* ══════════════════════════════════════════
+       DIALOG — exact match to Dialog.tsx
+    ══════════════════════════════════════════ */
+    .dialog-card {
+      background:#fff; border-radius:16px; padding:20px;
+      max-width:320px; position:relative; box-shadow:0 8px 32px rgba(0,0,0,0.18);
+    }
+    .dialog-sheet {
+      background:#fff; border-radius:20px 20px 0 0; padding:20px;
+      max-width:393px; position:relative;
+    }
+    .dialog-title { font-size:20px; font-weight:600; margin-bottom:4px; }
+    .dialog-desc  { font-size:16px; color:var(--gray-600); margin-bottom:16px; line-height:1.4; }
+    /* DialogClose: SVG 25.45×25.45, stroke #B3B3B3, strokeWidth 2.545 */
+    .dialog-close {
+      position:absolute; top:16px; right:16px;
+      width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+      cursor:default;
+    }
+
+    /* ══════════════════════════════════════════
+       PAGE CONTROL — exact match to PageControl.tsx
+    ══════════════════════════════════════════ */
+    .page-ctrl {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 12px; border-radius:50px;
+    }
+    .pd { width:8px; height:8px; border-radius:50%; }
+    .pd-on  { background:#fff; opacity:1; }
+    .pd-off { background:#000; opacity:0.3; }
+
+    /* ══════════════════════════════════════════
+       ICON / ICONBUTTON — exact match to Icon.tsx
+    ══════════════════════════════════════════ */
+    .icon-container {
+      display:inline-flex; align-items:center; justify-content:center;
+    }
+    .icon-btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      border-radius:50%; cursor:default; border:none; outline:none;
+    }
+    .icon-btn-sm { width:28px; height:28px; }
+    .icon-btn-md { width:36px; height:36px; }
+    .icon-btn-primary  { background:var(--brand-500); }
+    .icon-btn-neutral  { background:var(--gray-100); }
+    .icon-btn-subtle   { background:transparent; }
+    .icon-btn-destruct { background:var(--red-100); }
+
+    /* ══════════════════════════════════════════
+       ACTION ICON BUTTON — exact match to ActionIconButton.tsx
+    ══════════════════════════════════════════ */
+    .aib {
+      display:flex; align-items:center; justify-content:center; cursor:default;
+    }
+    .aib-dismiss {
+      width:56px; height:56px; border-radius:30.55px;
+      background:rgba(44,44,44,0.85);
+    }
+    .aib-like {
+      width:66px; height:66px; border-radius:36px;
+      background:rgba(255,255,255,0.8); box-shadow:0 4px 7.2px rgba(99,33,66,0.25);
+    }
+
+    /* ══════════════════════════════════════════
+       CHAT THUMBNAIL — exact match to ChatThumbnail.tsx
+    ══════════════════════════════════════════ */
+    .ct-list { border:1px solid var(--border); border-radius:12px; overflow:hidden; max-width:393px; }
+    .ct {
+      display:flex; align-items:center;
+      padding:12px 24px; gap:8px; background:#fff; border-bottom:1px solid var(--border);
+    }
+    .ct:last-child { border-bottom:none; }
+    .ct-avatar {
+      width:60px; height:60px; border-radius:9999px; overflow:hidden; flex-shrink:0; position:relative;
+    }
+    .ct-avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+    .ct-dot {
+      position:absolute; left:48px; top:9px; width:12px; height:12px;
+      border-radius:50%; background:#B3304B; border:2px solid #fff; z-index:3;
+    }
+    .ct-blocked-overlay {
+      position:absolute; inset:0; background:rgba(255,255,255,0.6);
+    }
+    .ct-info { flex:1; display:flex; flex-direction:column; gap:4px; overflow:hidden; min-width:0; }
+    .ct-name { font-size:16px; font-weight:600; }
+    .ct-preview { font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ct-pill {
+      background:#B3304B; border-radius:9999px; padding:4px 8px;
+      font-size:14px; font-weight:600; color:#F3F3F3; white-space:nowrap; flex-shrink:0;
+    }
+
+    /* ══════════════════════════════════════════
+       CARD — exact match to Card.tsx
+    ══════════════════════════════════════════ */
+    /* Card.tsx: bg=main.offwhite (#FFF8FA), borderRadius:20, border=main.xxlight (#FFEBF2), padding:20 */
+    .card {
+      background:#FFF8FA; border-radius:20px; padding:20px;
+      display:flex; flex-direction:column; gap:16px; max-width:360px;
+      border:1px solid #FFEBF2;
+    }
+
+    /* ══════════════════════════════════════════
+       BOTTOM TOOLBAR — exact match to BottomToolbar.tsx
+    ══════════════════════════════════════════ */
+    .toolbar {
+      height:56px; display:flex; align-items:center; justify-content:center;
+      padding:0 24px; background:#202020; max-width:393px;
+    }
+    .toolbar-inner { display:flex; align-items:center; gap:59px; }
+    .tb-btn { display:flex; align-items:center; justify-content:center; cursor:default; }
+    .tb-icon { width:24px; height:24px; border-radius:3px; }
+    .tb-avatar {
+      width:26px; height:26px; border-radius:13px; overflow:hidden;
+      border:1px solid #fff; display:flex; align-items:center; justify-content:center;
+    }
+    .tb-avatar.active { border-width:2px; border-color:var(--brand-500); }
+    .tb-avatar img { width:24px; height:24px; object-fit:cover; }
+    /* SVG replicas for toolbar icons */
+    .tb-chat-icon  { color:#F3F3F3; font-size:16px; }
+    .tb-home-icon  { color:var(--brand-500); font-size:16px; font-weight:700; }
+
+    /* Logo.tsx: SVG wordmark 283×121 viewBox, width=120 default, height auto (×0.4276)
+       color prop fills all paths — NOT a text element */
+    .logo-svg { display:block; }
+
+    /* ══════════════════════════════════════════
+       SEARCH — exact match to Search.tsx
+    ══════════════════════════════════════════ */
+    .search-wrap {
+      display:flex; align-items:center; gap:8px;
+      border:1.5px solid var(--brand-300); border-radius:14px;
+      background:#fff; padding:0 12px; width:280px;
+    }
+    .search-wrap.dark { border-width:0; }
+    .search-icon { font-size:16px; color:var(--gray-400); flex-shrink:0; }
+    .search-wrap input {
+      flex:1; padding:14px 0; font-family:var(--sans); font-size:16px;
+      border:none; outline:none; background:transparent; color:#2D070D;
+    }
+    .search-wrap input::placeholder { color: #F782AA; }
+    .search-clear { font-size:12px; color:var(--gray-400); cursor:default; }
+    .search-results {
+      background:#fff; border:1px solid var(--gray-200); border-radius:12px;
+      margin-top:4px; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-width:280px;
+    }
+    .search-result-item {
+      padding:12px 16px; font-size:16px; color:var(--text-primary);
+      border-bottom:1px solid var(--gray-100);
+    }
+    .search-result-item:last-child { border-bottom:none; }
+
+    /* ══════════════════════════════════════════
+       SELECT / DROPDOWN — exact match to Dropdown.tsx
+    ══════════════════════════════════════════ */
+    .select-wrap {
+      display:flex; align-items:center; justify-content:space-between;
+      border:1.5px solid var(--brand-300); border-radius:14px;
+      background:#fff; padding:16px; width:280px; cursor:default;
+    }
+    .select-wrap.dark { border-width:0; }
+    .select-wrap.invalid { border-color:#DC2626; }
+    .select-text { font-size:16px; flex:1; }
+    .select-arrow { font-size:12px; color:var(--gray-400); }
+    .select-sheet {
+      background:#fff; border-radius:20px 20px 0 0; max-width:393px;
+      border:1px solid var(--border);
+    }
+    .select-sheet-done {
+      display:flex; justify-content:flex-end; padding:16px;
+      border-bottom:1px solid #eee; font-size:16px; font-weight:600; color:var(--brand-500);
+    }
+    .select-sheet-item {
+      padding:14px 24px; font-size:16px; border-bottom:1px solid #f0f0f0;
+    }
+    .select-sheet-item.selected { color:var(--brand-500); font-weight:600; }
+
+    /* ══════════════════════════════════════════
+       NAVIGATION — exact match to Navigation.tsx
+    ══════════════════════════════════════════ */
+    .nav-pill-group { display:flex; gap:4px; flex-wrap:wrap; }
+    .nav-pill {
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:8px 14px; border-radius:100px; cursor:default;
+      font-family:var(--sans); font-size:14px;
+    }
+    .nav-pill.sel  { background:var(--brand-500); color:#fff; font-weight:600; }
+    .nav-pill.def  { background:transparent; color:var(--gray-600); font-weight:400; }
+    .nav-pill.dis  { background:transparent; color:var(--gray-600); opacity:0.4; }
+
+    .nav-btn-group { display:flex; gap:4px; }
+    .nav-btn {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:4px; padding:8px 12px; cursor:default; font-family:var(--sans);
+    }
+    .nav-btn.row-dir { flex-direction:row; gap:8px; }
+    .nav-btn-icon { width:24px; height:24px; display:flex; align-items:center; justify-content:center; }
+    .nav-btn-label { font-size:12px; }
+    .nav-btn.sel .nav-btn-label  { color:var(--brand-500); font-weight:600; }
+    .nav-btn.def .nav-btn-label  { color:var(--gray-500); font-weight:400; }
+    .nav-btn.dis { opacity:0.4; }
+
+    /* ══════════════════════════════════════════
+       TABS — exact match to Tabs.tsx
+    ══════════════════════════════════════════ */
+    .tab-list {
+      display:flex; border-bottom:1px solid var(--gray-200); overflow-x:auto;
+    }
+    .tab-item {
+      display:inline-flex; align-items:center; padding:12px 16px;
+      font-family:var(--sans); font-size:14px; cursor:default; white-space:nowrap;
+      border-bottom:2px solid transparent; margin-bottom:-1px;
+    }
+    .tab-item.sel   { border-bottom-color:var(--brand-500); color:var(--brand-500); font-weight:600; }
+    .tab-item.def   { color:var(--gray-500); }
+    .tab-item.dis   { opacity:0.4; color:var(--gray-500); }
+    .tab-panel { padding:16px 0; font-size:14px; color:var(--gray-600); }
+
+    /* ══════════════════════════════════════════
+       PAGINATION — exact match to Pagination.tsx
+    ══════════════════════════════════════════ */
+    .pag-wrap { display:flex; align-items:center; gap:4px; }
+    .pag-item {
+      display:flex; align-items:center; justify-content:center;
+      width:36px; height:36px; border-radius:8px;
+      font-family:var(--sans); font-size:14px; cursor:default;
+    }
+    .pag-item.current  { background:var(--brand-500); color:#fff; font-weight:600; }
+    .pag-item.num      { background:transparent; color:var(--gray-700); }
+    .pag-item.gap      { color:var(--gray-400); }
+    .pag-arrow { padding:8px; font-size:16px; color:var(--brand-500); cursor:default; }
+    .pag-arrow.dis { opacity:0.3; }
+
+    /* ══════════════════════════════════════════
+       SLIDER (single-thumb) — exact match to Slider.tsx
+    ══════════════════════════════════════════ */
+    .slider-single-wrap { width:280px; }
+    .slider-single-header { display:flex; justify-content:space-between; margin-bottom:8px; }
+    .slider-single-label  { font-size:14px; font-weight:500; }
+    .slider-single-val    { font-size:14px; color:var(--gray-500); }
+    .slider-single-track  {
+      position:relative; height:40px; display:flex; align-items:center;
+    }
+    .slider-single-rail  {
+      position:absolute; left:0; right:0; height:4px; border-radius:2px; background:var(--gray-200);
+    }
+    .slider-single-fill  {
+      position:absolute; height:4px; border-radius:2px; background:var(--brand-500);
+    }
+    .slider-single-thumb {
+      position:absolute; width:20px; height:20px; border-radius:50%;
+      background:#fff; border:2px solid var(--brand-500); margin-left:-10px;
+      box-shadow:0 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* ══════════════════════════════════════════
+       FIELDSET / FORM / FIELD / LABEL
+    ══════════════════════════════════════════ */
+    .fieldset-group { display:flex; flex-direction:column; gap:16px; max-width:320px; }
+    .form-field     { display:flex; flex-direction:column; gap:4px; }
+    .field-label    { font-size:14px; font-weight:500; color:#2D070D; }
+    .field-required { color:var(--red-600); }
+    .field-desc     { font-size:14px; color:var(--gray-500); }
+    .field-error    { font-size:14px; color:var(--red-600); }
+
+    /* ══════════════════════════════════════════
+       SEND LIKE SHEET / MATCH SHEET V2
+    ══════════════════════════════════════════ */
+    .dark-sheet {
+      background:#1E1E1E; border-radius:16px 16px 0 0;
+      padding:24px; display:flex; flex-direction:column; gap:24px;
+      max-width:393px; position:relative;
+    }
+    .dark-sheet-close {
+      position:absolute; top:16px; right:16px;
+      width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+      cursor:default;
+    }
+    .dark-sheet-title { font-size:48px; font-weight:700; color:#fff; text-align:center; letter-spacing:-0.96px; }
+    .dark-sheet-input-row { display:flex; align-items:center; gap:24px; }
+    .dark-sheet-textarea {
+      flex:1; background:#fff; border:1px solid var(--border); border-radius:8px;
+      padding:12px 16px; font-family:var(--sans); font-size:16px; font-style:italic;
+      color:#1E1E1E; height:80px; resize:none; outline:none;
+    }
+    .dark-sheet-textarea::placeholder { color:#B3B3B3; font-style:italic; }
+    .dark-sheet-send-col { width:61px; display:flex; flex-direction:column; align-items:center; gap:10px; }
+    .dark-sheet-send-btn {
+      width:44px; height:44px; border-radius:32px; background:#2C2C2C;
+      border:2px solid var(--border); display:flex; align-items:center; justify-content:center;
+    }
+    .dark-sheet-send-label { font-size:14px; font-weight:600; color:#fff; }
+
+    /* ══════════════════════════════════════════
+       GRADIENTS
+    ══════════════════════════════════════════ */
+    .grad-box {
+      width:110px; height:72px; border-radius:10px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:11px; color:#fff; font-weight:500; text-align:center; padding:4px;
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">proof <span>ds</span></div>
+
+    <div class="nav-group">Foundation</div>
+    <a class="nav-item" href="#colors">Colors</a>
+    <a class="nav-item" href="#typography">Typography</a>
+    <a class="nav-item" href="#gradients">Gradients</a>
+
+    <div class="nav-group">Form</div>
+    <a class="nav-item" href="#button">Button</a>
+    <a class="nav-item" href="#input">Input</a>
+    <a class="nav-item" href="#textarea">Textarea</a>
+    <a class="nav-item" href="#dateinput">DateInput</a>
+    <a class="nav-item" href="#switch">Switch</a>
+    <a class="nav-item" href="#checkbox">Checkbox</a>
+    <a class="nav-item" href="#radio">Radio</a>
+    <a class="nav-item" href="#rangeslider">RangeSlider</a>
+    <a class="nav-item" href="#tags">Tags</a>
+
+    <div class="nav-group">Display</div>
+    <a class="nav-item" href="#avatar">Avatar</a>
+    <a class="nav-item" href="#notification">Notification</a>
+    <a class="nav-item" href="#infocard">InfoCard</a>
+    <a class="nav-item" href="#accordion">Accordion</a>
+    <a class="nav-item" href="#dialog">Dialog</a>
+    <a class="nav-item" href="#pagecontrol">PageControl</a>
+    <a class="nav-item" href="#actionicon">ActionIconButton</a>
+    <a class="nav-item" href="#chatthumbnail">ChatThumbnail</a>
+    <a class="nav-item" href="#card">Card</a>
+
+    <div class="nav-group">Navigation</div>
+    <a class="nav-item" href="#toolbar">BottomToolbar</a>
+    <a class="nav-item" href="#logo">Logo</a>
+    <a class="nav-item" href="#navigation">Navigation</a>
+    <a class="nav-item" href="#icon">Icon / IconButton</a>
+    <a class="nav-item" href="#tabs">Tabs</a>
+    <a class="nav-item" href="#pagination">Pagination</a>
+
+    <div class="nav-group">Composite</div>
+    <a class="nav-item" href="#search">Search</a>
+    <a class="nav-item" href="#select">Select</a>
+    <a class="nav-item" href="#slider">Slider</a>
+    <a class="nav-item" href="#fieldset">Fieldset</a>
+    <a class="nav-item" href="#sendlikesheet">SendLikeSheet</a>
+    <a class="nav-item" href="#matchsheet">MatchSheetV2</a>
+    <a class="nav-item" href="#settingssheets">Settings Sheets</a>
+  </nav>
+
+  <!-- ── Content ── -->
+  <main class="content">
+
+    <!-- ══ COLORS ══ -->
+    <section class="section" id="colors">
+      <h2 class="section-title">Colors</h2>
+
+      <div class="sub">
+        <div class="sub-title">Brand primitives</div>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-box" style="background:#FFF8FA"></div><div class="swatch-name">brand.100<br>offwhite</div><div class="swatch-hex">#FFF8FA</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#FFEBF2"></div><div class="swatch-name">brand.200<br>xxlight</div><div class="swatch-hex">#FFEBF2</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#FFBDD3"></div><div class="swatch-name">brand.300<br>xlight</div><div class="swatch-hex">#FFBDD3</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#F782AA"></div><div class="swatch-name">brand.400<br>light</div><div class="swatch-hex">#F782AA</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#DA4570"></div><div class="swatch-name">brand.500<br>DEFAULT</div><div class="swatch-hex">#DA4570</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#B3304B"></div><div class="swatch-name">brand.600<br>medium</div><div class="swatch-hex">#B3304B</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#5E1B27"></div><div class="swatch-name">brand.700<br>dark</div><div class="swatch-hex">#5E1B27</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#2D070D"></div><div class="swatch-name">brand.800<br>xdark</div><div class="swatch-hex">#2D070D</div></div>
+        </div>
+      </div>
+
+      <div class="sub">
+        <div class="sub-title">Gray primitives</div>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-box" style="background:#F9FAFB"></div><div class="swatch-name">gray.100</div><div class="swatch-hex">#F9FAFB</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#F3F4F6"></div><div class="swatch-name">gray.200</div><div class="swatch-hex">#F3F4F6</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#E5E7EB"></div><div class="swatch-name">gray.300</div><div class="swatch-hex">#E5E7EB</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#D1D5DB"></div><div class="swatch-name">gray.400</div><div class="swatch-hex">#D1D5DB</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#9CA3AF"></div><div class="swatch-name">gray.500</div><div class="swatch-hex">#9CA3AF</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#6B7280"></div><div class="swatch-name">gray.600</div><div class="swatch-hex">#6B7280</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#4B5563"></div><div class="swatch-name">gray.700</div><div class="swatch-hex">#4B5563</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#374151"></div><div class="swatch-name">gray.800</div><div class="swatch-hex">#374151</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#1F2937"></div><div class="swatch-name">gray.900</div><div class="swatch-hex">#1F2937</div></div>
+        </div>
+      </div>
+
+      <div class="sub">
+        <div class="sub-title">Semantic tokens</div>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-box" style="background:#1E1E1E"></div><div class="swatch-name">text.primary</div><div class="swatch-hex">#1E1E1E</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#757575"></div><div class="swatch-name">text.secondary</div><div class="swatch-hex">#757575</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#D9D9D9"></div><div class="swatch-name">border.default</div><div class="swatch-hex">#D9D9D9</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#F3F3F3;border-color:#ddd"></div><div class="swatch-name">bg</div><div class="swatch-hex">#F3F3F3</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#fff;border-color:#ddd"></div><div class="swatch-name">white</div><div class="swatch-hex">#FFFFFF</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#F3F3F3;border-color:#ddd"></div><div class="swatch-name">icon.onAccent</div><div class="swatch-hex">#F3F3F3</div></div>
+        </div>
+      </div>
+
+      <div class="sub">
+        <div class="sub-title">Status</div>
+        <div class="swatch-grid">
+          <div class="swatch"><div class="swatch-box" style="background:#FEF2F2"></div><div class="swatch-name">red.100</div><div class="swatch-hex">#FEF2F2</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#EF4444"></div><div class="swatch-name">red.600</div><div class="swatch-hex">#EF4444</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#DC2626"></div><div class="swatch-name">red.700</div><div class="swatch-hex">#DC2626</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#F0FDF4"></div><div class="swatch-name">green.100</div><div class="swatch-hex">#F0FDF4</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#22C55E"></div><div class="swatch-name">green.600</div><div class="swatch-hex">#22C55E</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#FEFCE8"></div><div class="swatch-name">yellow.100</div><div class="swatch-hex">#FEFCE8</div></div>
+          <div class="swatch"><div class="swatch-box" style="background:#FACC15"></div><div class="swatch-name">yellow.500</div><div class="swatch-hex">#FACC15</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ TYPOGRAPHY ══ -->
+    <section class="section" id="typography">
+      <h2 class="section-title">Typography</h2>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">titleHero</div><div class="type-meta-spec">Inter 700 · 72px · 1.2lh · Noto Serif for quotes</div></div>
+        <div style="font-family:var(--sans);font-weight:700;font-size:72px;letter-spacing:-0.02em;line-height:1.2">Proof</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">titlePage / sm</div><div class="type-meta-spec">Inter 700 · 40px · 1.2lh</div></div>
+        <div style="font-family:var(--sans);font-weight:700;font-size:40px;letter-spacing:-0.02em;line-height:1.2">My Profile</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">heading / sm</div><div class="type-meta-spec">Inter 600 · 20px · 1.2lh</div></div>
+        <div style="font-family:var(--sans);font-weight:600;font-size:20px;line-height:1.2">Account Settings</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">subheading</div><div class="type-meta-spec">Inter 400 · 16px · 1.2lh</div></div>
+        <div style="font-family:var(--sans);font-weight:400;font-size:16px;line-height:1.2">Section label</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">body</div><div class="type-meta-spec">Inter 400 · 16px · 1.4lh</div></div>
+        <div style="font-family:var(--sans);font-weight:400;font-size:16px;line-height:1.4">The quick brown fox jumps over the lazy dog.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">bodyStrong</div><div class="type-meta-spec">Inter 600 · 16px · 1.4lh</div></div>
+        <div style="font-family:var(--sans);font-weight:600;font-size:16px;line-height:1.4">The quick brown fox jumps over the lazy dog.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">bodySmall</div><div class="type-meta-spec">Inter 400 · 14px · 1.4lh</div></div>
+        <div style="font-family:var(--sans);font-weight:400;font-size:14px;line-height:1.4">The quick brown fox jumps over the lazy dog.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">bodySmallStrong</div><div class="type-meta-spec">Inter 600 · 14px · 1.4lh</div></div>
+        <div style="font-family:var(--sans);font-weight:600;font-size:14px;line-height:1.4">The quick brown fox jumps over the lazy dog.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">code</div><div class="type-meta-spec">Roboto Mono · 16px · 1.3lh</div></div>
+        <div style="font-family:var(--mono);font-size:16px;line-height:1.3">const x = "hello";</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><div class="type-meta-name">titlePage · serif quote</div><div class="type-meta-spec">Noto Serif · decorative</div></div>
+        <div style="font-family:var(--serif);font-size:48px;font-style:italic;line-height:1">"</div>
+      </div>
+    </section>
+
+    <!-- ══ GRADIENTS ══ -->
+    <section class="section" id="gradients">
+      <h2 class="section-title">Gradients</h2>
+      <div class="sub">
+        <div class="sub-title">Brand gradient stops (from colors.ts)</div>
+        <div class="row" style="align-items:flex-start">
+          <div class="col"><div class="grad-box" style="background:linear-gradient(180deg,#C94F7C,#3C0D0E)">primary<br>vertical</div><div class="note">gradient.from #C94F7C<br>→ gradient.to #3C0D0E</div></div>
+          <div class="col"><div class="grad-box" style="background:linear-gradient(180deg,#C94F7C,#7C1553)">secondary<br>vertical</div><div class="note">gradient.from2 #C94F7C<br>→ gradient.to2 #7C1553</div></div>
+          <div class="col"><div class="grad-box" style="background:linear-gradient(135deg,#C94F7C,#3C0D0E)">primary<br>diagonal</div><div class="note">diagonal (default)</div></div>
+          <div class="col"><div class="grad-box" style="background:linear-gradient(90deg,#C94F7C,#3C0D0E)">primary<br>horizontal</div><div class="note">horizontal</div></div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Overlay gradients (for text legibility over photos)</div>
+        <div class="row" style="align-items:flex-start">
+          <div class="col"><div class="grad-box" style="background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.72))">LinearBottom</div><div class="note">gradientOverlays<br>.linearBottom<br>→ rgba(0,0,0,0.72)</div></div>
+          <div class="col"><div class="grad-box" style="background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0.50));border:1px solid #ddd">LinearBottom 2</div><div class="note">gradientOverlays<br>.linearBottom2<br>→ rgba(0,0,0,0.50)</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ BUTTON ══ -->
+    <section class="section" id="button">
+      <h2 class="section-title">Button</h2>
+      <div class="sub">
+        <div class="sub-title">Variants · size md</div>
+        <div class="row" style="flex-wrap:wrap">
+          <div class="pv"><div class="btn btn-md btn-primary">primary</div><div class="pv-label">primary</div></div>
+          <div class="pv"><div class="btn btn-md btn-secondary">secondary</div><div class="pv-label">secondary</div></div>
+          <div class="pv"><div class="btn btn-md btn-outline">outline</div><div class="pv-label">outline</div></div>
+          <div class="pv"><div class="btn btn-md btn-ghost">ghost</div><div class="pv-label">ghost</div></div>
+          <div class="pv"><div class="btn btn-md btn-destructive">destructive</div><div class="pv-label">destructive</div></div>
+          <div class="pv"><div class="btn btn-md btn-dangerPrimary">dangerPrimary</div><div class="pv-label">dangerPrimary</div></div>
+          <div class="pv"><div class="btn btn-md btn-dangerSecondary">dangerSecondary</div><div class="pv-label">dangerSecondary</div></div>
+          <div class="pv"><div class="btn btn-md btn-link">link</div><div class="pv-label">link</div></div>
+          <div class="pv"><div class="btn btn-md btn-neutralFilled">neutralFilled</div><div class="pv-label">neutralFilled</div></div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">On dark backgrounds</div>
+        <div class="on-dark">
+          <div class="pv"><div class="btn btn-md btn-primaryOnDark">primaryOnDark</div><div class="pv-label" style="color:#666">primaryOnDark</div></div>
+          <div class="pv"><div class="btn btn-md btn-white">white</div><div class="pv-label" style="color:#666">white</div></div>
+          <div class="pv"><div class="btn btn-md btn-linkOnDark">linkOnDark</div><div class="pv-label" style="color:#666">linkOnDark</div></div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Sizes</div>
+        <div class="row" style="align-items:flex-end">
+          <div class="pv"><div class="btn btn-sm btn-primary">small</div><div class="pv-label">sm · 8/16</div></div>
+          <div class="pv"><div class="btn btn-md btn-primary">medium</div><div class="pv-label">md · 12/12</div></div>
+          <div class="pv"><div class="btn btn-lg btn-primary">large</div><div class="pv-label">lg · 16/32</div></div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">States</div>
+        <div class="row">
+          <div class="pv"><div class="btn btn-md btn-primary">default</div><div class="pv-label">default</div></div>
+          <div class="pv"><div class="btn btn-md btn-disabled">disabled</div><div class="pv-label">disabled</div></div>
+          <div class="pv"><div class="btn btn-md btn-primary" style="opacity:0.7">⟳ loading</div><div class="pv-label">loading</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ INPUT ══ -->
+    <section class="section" id="input">
+      <h2 class="section-title">Input</h2>
+      <!-- Input.tsx: border=gray[300] #E5E7EB, text=main.xdark #2D070D, italic when empty, gray[500] placeholder #9CA3AF -->
+      <div class="sub">
+        <div class="sub-title">Empty (italic placeholder, gray[500])</div>
+        <div class="input-wrap"><input type="text" placeholder="Placeholder text"></div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">With value (normal style, main.xdark #2D070D)</div>
+        <div class="input-wrap"><input type="text" value="jeremiah.trent@email.com" class="has-value" readonly></div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Invalid (border #DC2626)</div>
+        <div class="col" style="max-width:280px">
+          <div class="input-wrap invalid"><input type="email" value="not-an-email" class="has-value" readonly></div>
+          <div class="input-field-err">Please enter a valid email address</div>
+        </div>
+      </div>
+      <div class="sub">
+        <!-- InputField: label=bodySmall Inter500 14px main.dark #5E1B27, desc=bodySmall gray[500] #9CA3AF -->
+        <div class="sub-title">InputField · label + description</div>
+        <div class="col" style="max-width:280px">
+          <div class="input-field-label">Email address</div>
+          <div class="input-field-desc">We'll never share your email.</div>
+          <div class="input-wrap"><input type="email" placeholder="you@example.com"></div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">secureToggle (Show/Hide · main.medium #B3304B Inter500)</div>
+        <div class="input-wrap" style="width:280px">
+          <input type="password" value="mysecretpass" class="has-value" readonly>
+          <span class="show-hide">Show</span>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">onDark (no border, white bg)</div>
+        <div class="on-dark">
+          <div class="input-wrap" style="border-width:0;width:280px"><input type="text" placeholder="Search…"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ TEXTAREA ══ -->
+    <section class="section" id="textarea">
+      <h2 class="section-title">Textarea</h2>
+      <!-- Textarea.tsx: gray[300] border, main.xdark text (#2D070D), paddingV:14 paddingH:16, italic when empty,
+           gray[500] placeholder, minHeight=numberOfLines×24 (default 4 lines = 96px) -->
+      <div class="sub">
+        <div class="sub-title">Empty (italic, 4 lines = minHeight 96px)</div>
+        <div class="ta-wrap"><textarea placeholder="Let your matches know more about this photo"></textarea></div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">With value (normal style)</div>
+        <div class="ta-wrap"><textarea class="has-value" readonly>This is from Glacier National Park — the view at sunrise was unlike anything I've ever seen.</textarea></div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Invalid (border #DC2626)</div>
+        <div class="col" style="max-width:280px">
+          <div class="ta-wrap" style="border-color:#DC2626"><textarea class="has-value" readonly>Too short.</textarea></div>
+          <div class="input-field-err">Caption must be at least 20 characters</div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">TextareaField · label + description</div>
+        <div class="col" style="max-width:280px">
+          <div class="input-field-label">Photo caption</div>
+          <div class="input-field-desc">Help matches understand this photo.</div>
+          <div class="ta-wrap"><textarea placeholder="Describe what's happening here…"></textarea></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ DATE INPUT ══ -->
+    <section class="section" id="dateinput">
+      <h2 class="section-title">DateInput</h2>
+      <!-- DateInput.tsx: border=main.xlight #FFBDD3, divider=same, placeholder=main.light #F782AA italic,
+           text=main.xdark #2D070D, label=bodySmall Inter500 main.dark #5E1B27 -->
+      <div class="sub">
+        <div class="sub-title">Empty (placeholder=main.light #F782AA italic)</div>
+        <div class="col" style="max-width:280px">
+          <div class="input-field-label">Birthday</div>
+          <div class="date-wrap">
+            <div class="date-seg" style="width:28%"><input type="text" placeholder="MM" style="width:100%"></div>
+            <div class="date-divider"></div>
+            <div class="date-seg" style="width:28%"><input type="text" placeholder="DD" style="width:100%"></div>
+            <div class="date-divider"></div>
+            <div class="date-seg" style="width:44%"><input type="text" placeholder="YYYY" style="width:100%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">With value (main.xdark #2D070D, normal style)</div>
+        <div class="date-wrap">
+          <div class="date-seg" style="width:28%"><input type="text" value="04" class="has-value" readonly style="width:100%"></div>
+          <div class="date-divider"></div>
+          <div class="date-seg" style="width:28%"><input type="text" value="06" class="has-value" readonly style="width:100%"></div>
+          <div class="date-divider"></div>
+          <div class="date-seg" style="width:44%"><input type="text" value="2004" readonly style="width:100%"></div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Error state</div>
+        <div class="col" style="max-width:280px">
+          <div class="date-wrap error">
+            <div class="date-seg" style="width:28%"><input type="text" value="13" readonly style="width:100%"></div>
+            <div class="date-divider"></div>
+            <div class="date-seg" style="width:28%"><input type="text" value="45" readonly style="width:100%"></div>
+            <div class="date-divider"></div>
+            <div class="date-seg" style="width:44%"><input type="text" value="1800" readonly style="width:100%"></div>
+          </div>
+          <div class="input-field-err">Please enter a valid date</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ SWITCH ══ -->
+    <section class="section" id="switch">
+      <h2 class="section-title">Switch</h2>
+      <div class="sub">
+        <div class="sub-title">States</div>
+        <div class="col" style="gap:16px">
+          <div class="sw-row"><div class="sw-track sw-off"><div class="sw-thumb"></div></div><span style="font-size:14px">Off</span></div>
+          <div class="sw-row"><div class="sw-track sw-on"><div class="sw-thumb"></div></div><span style="font-size:14px">On</span></div>
+          <div class="sw-row" style="opacity:0.4"><div class="sw-track sw-on"><div class="sw-thumb"></div></div><span style="font-size:14px">Disabled</span></div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">With label + description (SwitchGroup)</div>
+        <div class="col" style="gap:16px">
+          <div class="sw-row">
+            <div class="sw-track sw-on"><div class="sw-thumb"></div></div>
+            <div><div class="sw-label">New matches</div><div class="sw-desc">Notify when you get a new match</div></div>
+          </div>
+          <div class="sw-row">
+            <div class="sw-track sw-off"><div class="sw-thumb"></div></div>
+            <div><div class="sw-label">New messages</div><div class="sw-desc">Notify on incoming messages</div></div>
+          </div>
+          <div class="sw-row">
+            <div class="sw-track sw-on"><div class="sw-thumb"></div></div>
+            <div><div class="sw-label">Likes received</div><div class="sw-desc">Notify when someone likes you</div></div>
+          </div>
+          <div class="sw-row" style="opacity:0.4">
+            <div class="sw-track sw-off"><div class="sw-thumb"></div></div>
+            <div><div class="sw-label">Super likes (disabled)</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ CHECKBOX ══ -->
+    <section class="section" id="checkbox">
+      <h2 class="section-title">Checkbox</h2>
+      <div class="sub">
+        <div class="sub-title">States</div>
+        <div class="col" style="gap:14px">
+          <div class="cb-row"><div class="cb-box"></div><div><div class="cb-label">Unchecked</div></div></div>
+          <div class="cb-row"><div class="cb-box checked"><span class="cb-check">✓</span></div><div><div class="cb-label">Checked</div></div></div>
+          <div class="cb-row"><div class="cb-box indeterminate"><div class="cb-dash"></div></div><div><div class="cb-label">Indeterminate</div></div></div>
+          <div class="cb-row" style="opacity:0.4"><div class="cb-box checked"><span class="cb-check">✓</span></div><div><div class="cb-label">Disabled</div></div></div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">CheckboxGroup</div>
+        <div class="col" style="gap:12px">
+          <div class="cb-row"><div class="cb-box checked"><span class="cb-check">✓</span></div><div><div class="cb-label">Hiking</div><div class="cb-desc">Outdoor activities</div></div></div>
+          <div class="cb-row"><div class="cb-box"></div><div><div class="cb-label">Photography</div></div></div>
+          <div class="cb-row"><div class="cb-box checked"><span class="cb-check">✓</span></div><div><div class="cb-label">Food &amp; Cooking</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ RADIO ══ -->
+    <section class="section" id="radio">
+      <h2 class="section-title">Radio</h2>
+      <div class="sub">
+        <div class="sub-title">RadioGroup</div>
+        <div class="col" style="gap:12px">
+          <div class="rb-row"><div class="rb-circle selected"><div class="rb-dot"></div></div><div><div class="rb-label">Long-term</div><div class="rb-desc">Looking for something serious</div></div></div>
+          <div class="rb-row"><div class="rb-circle"></div><div><div class="rb-label">Short-term</div></div></div>
+          <div class="rb-row"><div class="rb-circle"></div><div><div class="rb-label">Just friends</div></div></div>
+          <div class="rb-row" style="opacity:0.4"><div class="rb-circle"></div><div><div class="rb-label">Disabled option</div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ RANGE SLIDER ══ -->
+    <section class="section" id="rangeslider">
+      <h2 class="section-title">RangeSlider</h2>
+      <!-- RangeSlider.tsx: labels float above thumbs (absolute positioned), track container height:44 margin:10,
+           rail=border.default #D9D9D9, active=main.medium #B3304B, thumbs 20×20 solid #B3304B no border -->
+      <div class="sub">
+        <div class="sub-title">Age range · 22–38 (20–60 scale = 13%–38%)</div>
+        <div class="slider-wrap" style="width:280px">
+          <!-- Labels: absolutely above each thumb -->
+          <div class="slider-labels" style="height:20px;position:relative;margin:0 10px">
+            <span class="slider-label" style="left:13%;transform:translateX(-50%)">22</span>
+            <span class="slider-label" style="left:38%;transform:translateX(-50%)">38</span>
+          </div>
+          <div class="slider-track">
+            <div class="slider-rail"></div>
+            <div class="slider-range" style="left:13%;width:25%"></div>
+            <div class="slider-thumb" style="left:13%"></div>
+            <div class="slider-thumb" style="left:38%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Distance · 5–50 mi (0–100 scale = 5%–50%)</div>
+        <div class="slider-wrap" style="width:280px">
+          <div class="slider-labels" style="height:20px;position:relative;margin:0 10px">
+            <span class="slider-label" style="left:5%;transform:translateX(-50%)">5 mi</span>
+            <span class="slider-label" style="left:50%;transform:translateX(-50%)">50 mi</span>
+          </div>
+          <div class="slider-track">
+            <div class="slider-rail"></div>
+            <div class="slider-range" style="left:5%;width:45%"></div>
+            <div class="slider-thumb" style="left:5%"></div>
+            <div class="slider-thumb" style="left:50%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Disabled (opacity:0.4)</div>
+        <div class="slider-wrap" style="width:280px;opacity:0.4">
+          <div class="slider-labels" style="height:20px;position:relative;margin:0 10px">
+            <span class="slider-label" style="left:20%;transform:translateX(-50%)">20</span>
+            <span class="slider-label" style="left:60%;transform:translateX(-50%)">60</span>
+          </div>
+          <div class="slider-track">
+            <div class="slider-rail"></div>
+            <div class="slider-range" style="left:20%;width:40%"></div>
+            <div class="slider-thumb" style="left:20%"></div>
+            <div class="slider-thumb" style="left:60%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="note">labels float above thumbs · rail=#D9D9D9 · active=#B3304B (main.medium) · thumbs 20×20 solid circles · touch target height 44px</div>
+    </section>
+
+    <!-- ══ TAGS ══ -->
+    <section class="section" id="tags">
+      <h2 class="section-title">Tags</h2>
+      <div class="sub">
+        <div class="sub-title">Tag — all schemes × variants</div>
+        <div class="col" style="gap:10px">
+          <div class="row">
+            <span class="tag" style="background:#DA4570;color:#fff">brand primary</span>
+            <span class="tag" style="background:#FFEBF2;color:#DA4570">brand secondary</span>
+          </div>
+          <div class="row">
+            <span class="tag" style="background:#EF4444;color:#fff">danger primary</span>
+            <span class="tag" style="background:#FEF2F2;color:#DC2626">danger secondary</span>
+          </div>
+          <div class="row">
+            <span class="tag" style="background:#22C55E;color:#fff">positive primary</span>
+            <span class="tag" style="background:#F0FDF4;color:#16A34A">positive secondary</span>
+          </div>
+          <div class="row">
+            <span class="tag" style="background:#FACC15;color:#713F12">warning primary</span>
+            <span class="tag" style="background:#FEFCE8;color:#A16207">warning secondary</span>
+          </div>
+          <div class="row">
+            <span class="tag" style="background:#4B5563;color:#fff">neutral primary</span>
+            <span class="tag" style="background:#F9FAFB;color:#4B5563">neutral secondary</span>
+          </div>
+          <div class="row">
+            <span class="tag" style="background:#F9FAFB;color:#4B5563">with remove <span style="margin-left:4px;font-weight:600">×</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">TagToggle</div>
+        <div class="row">
+          <div class="tag-toggle">Hiking</div>
+          <div class="tag-toggle sel">Photography</div>
+          <div class="tag-toggle">Food &amp; Cooking</div>
+          <div class="tag-toggle sel">Travel</div>
+          <div class="tag-toggle" style="opacity:0.4">Disabled</div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">TagGhost (on dark background)</div>
+        <div class="on-dark">
+          <div class="tag-ghost">Kindness</div>
+          <div class="tag-ghost sel">Ambition</div>
+          <div class="tag-ghost">Humor</div>
+          <div class="tag-ghost sel">Loyalty</div>
+          <div class="tag-ghost" style="opacity:0.4">Disabled</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ AVATAR ══ -->
+    <section class="section" id="avatar">
+      <h2 class="section-title">Avatar</h2>
+      <div class="sub">
+        <div class="sub-title">Sizes · with image</div>
+        <div class="row" style="align-items:flex-end">
+          <div class="col" style="align-items:center">
+            <div class="avatar" style="width:28px;height:28px"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96" alt=""></div>
+            <div class="note">xs · 28</div>
+          </div>
+          <div class="col" style="align-items:center">
+            <div class="avatar" style="width:36px;height:36px"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96" alt=""></div>
+            <div class="note">sm · 36</div>
+          </div>
+          <div class="col" style="align-items:center">
+            <div class="avatar" style="width:48px;height:48px"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=96" alt=""></div>
+            <div class="note">md · 48</div>
+          </div>
+          <div class="col" style="align-items:center">
+            <div class="avatar" style="width:72px;height:72px"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=144" alt=""></div>
+            <div class="note">lg · 72</div>
+          </div>
+          <div class="col" style="align-items:center">
+            <div class="avatar" style="width:96px;height:96px"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=192" alt=""></div>
+            <div class="note">xl · 96</div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Initials fallback</div>
+        <div class="row" style="align-items:flex-end">
+          <div class="col" style="align-items:center">
+            <div class="avatar" style="width:48px;height:48px"><span class="avatar-initials" style="font-size:18px">JT</span></div>
+            <div class="note">md</div>
+          </div>
+          <div class="col" style="align-items:center">
+            <div class="avatar" style="width:72px;height:72px"><span class="avatar-initials" style="font-size:26px">JT</span></div>
+            <div class="note">lg</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ NOTIFICATION ══ -->
+    <section class="section" id="notification">
+      <h2 class="section-title">Notification</h2>
+      <div class="sub">
+        <div class="sub-title">message · variant="message" (bg=#FFEBF2 · border=#FFBDD3 · text=#5E1B27)</div>
+        <div class="notif notif-message">
+          <div style="margin-top:1px;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8.66667 1.3335L2 9.3335H8L7.33333 14.6668L14 6.66683H8L8.66667 1.3335Z" fill="#B3304B" stroke="#B3304B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="notif-text-message">Your profile is live and visible to other users.</div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">alert · variant="alert" (bg=#FEF2F2 · border=#FECACA · text=#DC2626)</div>
+        <div class="notif notif-alert">
+          <div style="margin-top:1px;flex-shrink:0;font-size:16px;line-height:1">⚠</div>
+          <div class="notif-text-alert">Your account has been flagged for review.</div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">dismissible</div>
+        <div class="notif notif-message" style="justify-content:space-between">
+          <span style="color:#B3304B">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:block">
+              <path d="M8.66667 1.3335L2 9.3335H8L7.33333 14.6668L14 6.66683H8L8.66667 1.3335Z" fill="#B3304B" stroke="#B3304B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div class="notif-text-message" style="flex:1;margin:0 8px">Complete your profile to get better matches.</div>
+          <span class="notif-dismiss" style="color:#5E1B27">✕</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ INFOCARD ══ -->
+    <section class="section" id="infocard">
+      <h2 class="section-title">InfoCard</h2>
+      <div class="sub">
+        <div class="sub-title">With title + description + dismiss</div>
+        <div class="info-card">
+          <!-- Zap SVG: viewBox="0 0 16 16", fill+stroke main.medium #B3304B, strokeWidth:1.6 -->
+          <div style="width:20px;height:20px;flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+              <path d="M8.66667 1.3335L2 9.3335H8L7.33333 14.6668L14 6.66683H8L8.66667 1.3335Z" fill="#B3304B" stroke="#B3304B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div style="flex:1;gap:4px;display:flex;flex-direction:column">
+            <div class="info-title">Start with candid photos</div>
+            <div class="info-desc">Most of our users enjoy candid photos of you rather than group photos</div>
+          </div>
+          <div class="info-x">
+            <svg width="25.45" height="25.45" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="#757575" stroke-width="2.545" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Title only (no dismiss)</div>
+        <div class="info-card">
+          <div style="width:20px;height:20px;flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+              <path d="M8.66667 1.3335L2 9.3335H8L7.33333 14.6668L14 6.66683H8L8.66667 1.3335Z" fill="#B3304B" stroke="#B3304B" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div><div class="info-title">Your feedback is anonymous</div></div>
+        </div>
+      </div>
+      <div class="note">bg #FFF8FA · radius 8 · padding 16 · zap SVG fill/stroke #B3304B · title=bodyStrong(16) #B3304B · desc=bodySmall(14) #4B5563 · dismiss=SVG X #757575</div>
+    </section>
+
+    <!-- ══ ACCORDION ══ -->
+    <section class="section" id="accordion">
+      <h2 class="section-title">Accordion</h2>
+      <div class="accordion">
+        <div class="acc-item">
+          <div class="acc-header">
+            <span class="acc-title">How does matching work?</span>
+            <span class="acc-arrow open">▼</span>
+          </div>
+          <div class="acc-body">When two users both like each other, it becomes a match and a chat opens automatically.</div>
+        </div>
+        <div class="acc-item">
+          <div class="acc-header">
+            <span class="acc-title">Is my feedback anonymous?</span>
+            <span class="acc-arrow">▼</span>
+          </div>
+        </div>
+        <div class="acc-item">
+          <div class="acc-header" style="opacity:0.4">
+            <span class="acc-title">Disabled item</span>
+            <span class="acc-arrow">▼</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ DIALOG ══ -->
+    <section class="section" id="dialog">
+      <h2 class="section-title">Dialog</h2>
+      <div class="sub">
+        <div class="sub-title">Card type (centered modal)</div>
+        <div style="background:rgba(0,0,0,0.3);padding:24px;border-radius:12px;display:inline-block">
+          <div class="dialog-card">
+            <div class="dialog-close"><svg width="25.45" height="25.45" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#B3B3B3" stroke-width="2.545" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="dialog-title">Log out</div>
+            <div class="dialog-desc">Are you sure you want to log out of your account?</div>
+            <div class="col" style="gap:8px">
+              <div class="btn btn-md btn-primary" style="width:100%;justify-content:center">Log out</div>
+              <div class="btn btn-md btn-secondary" style="width:100%;justify-content:center">Cancel</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Sheet type (bottom sheet)</div>
+        <div style="background:rgba(0,0,0,0.3);padding:16px 0 0;border-radius:12px 12px 0 0;display:inline-block;width:393px">
+          <div class="dialog-sheet">
+            <div class="dialog-close"><svg width="25.45" height="25.45" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#B3B3B3" stroke-width="2.545" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="dialog-title">Delete account</div>
+            <div class="dialog-desc">This will permanently delete your profile, photos, matches, and messages. This cannot be undone.</div>
+            <div class="col" style="gap:8px">
+              <div class="btn btn-md btn-dangerPrimary" style="width:100%;justify-content:center">Delete my account</div>
+              <div class="btn btn-md btn-secondary" style="width:100%;justify-content:center">Cancel</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ PAGE CONTROL ══ -->
+    <section class="section" id="pagecontrol">
+      <h2 class="section-title">PageControl</h2>
+      <div style="background:#555;padding:24px;border-radius:12px;display:inline-flex;gap:24px;align-items:center">
+        <div class="col" style="align-items:center;gap:6px">
+          <div class="page-ctrl"><div class="pd pd-on"></div><div class="pd pd-off"></div><div class="pd pd-off"></div></div>
+          <div class="note" style="color:#aaa">1 of 3</div>
+        </div>
+        <div class="col" style="align-items:center;gap:6px">
+          <div class="page-ctrl"><div class="pd pd-off"></div><div class="pd pd-on"></div><div class="pd pd-off"></div><div class="pd pd-off"></div></div>
+          <div class="note" style="color:#aaa">2 of 4</div>
+        </div>
+        <div class="col" style="align-items:center;gap:6px">
+          <div class="page-ctrl"><div class="pd pd-off"></div><div class="pd pd-off"></div><div class="pd pd-off"></div><div class="pd pd-off"></div><div class="pd pd-on"></div></div>
+          <div class="note" style="color:#aaa">5 of 5</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ ACTION ICON BUTTON ══ -->
+    <section class="section" id="actionicon">
+      <h2 class="section-title">ActionIconButton</h2>
+      <div class="row" style="align-items:flex-end">
+        <div class="pv">
+          <!-- dismiss: 56×56, r=30.55, rgba(44,44,44,0.85), X SVG 25.45×25.45 -->
+          <div class="aib aib-dismiss">
+            <svg width="25.45" height="25.45" viewBox="0 0 24 24" fill="none">
+              <path d="M18 6L6 18M6 6l12 12" stroke="#F5F5F5" stroke-width="2.545" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="pv-label">dismiss</div>
+        </div>
+        <div class="pv">
+          <!-- like: 66×66, r=36, rgba(255,255,255,0.8), heart SVG 30×30 stroke brand-500 -->
+          <div class="aib aib-like">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="#DA4570" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="pv-label">like</div>
+        </div>
+        <div class="pv" style="opacity:0.4">
+          <div class="aib aib-like">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="#DA4570" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="pv-label">disabled</div>
+        </div>
+      </div>
+      <div class="note">dismiss: 56×56 r=30.55 rgba(44,44,44,0.85) · like: 66×66 r=36 rgba(255,255,255,0.8) shadow(#632142)</div>
+    </section>
+
+    <!-- ══ CHAT THUMBNAIL ══ -->
+    <section class="section" id="chatthumbnail">
+      <h2 class="section-title">ChatThumbnail</h2>
+      <div class="ct-list">
+
+        <!-- new_unread -->
+        <div class="ct">
+          <div class="ct-avatar">
+            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=120&h=120&fit=crop" alt="">
+            <div class="ct-dot"></div>
+          </div>
+          <div class="ct-info">
+            <div class="ct-name">Sophia</div>
+            <div class="ct-preview" style="font-weight:600;color:#1E1E1E">Hey! I loved your photos 😊</div>
+          </div>
+          <div class="ct-pill">Your turn</div>
+        </div>
+
+        <!-- read -->
+        <div class="ct">
+          <div class="ct-avatar"><img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop" alt=""></div>
+          <div class="ct-info">
+            <div class="ct-name">Marcus</div>
+            <div class="ct-preview" style="color:#757575">That sounds like a great idea!</div>
+          </div>
+          <div class="ct-pill">Your turn</div>
+        </div>
+
+        <!-- new_match -->
+        <div class="ct">
+          <div class="ct-avatar"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop" alt=""></div>
+          <div class="ct-info">
+            <div class="ct-name">Jordan</div>
+            <div class="ct-preview" style="color:#757575;font-style:italic">You matched with Jordan!</div>
+          </div>
+          <div class="ct-pill">Your turn</div>
+        </div>
+
+        <!-- message_sent -->
+        <div class="ct">
+          <div class="ct-avatar"><img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop" alt=""></div>
+          <div class="ct-info">
+            <div class="ct-name">Alex</div>
+            <div class="ct-preview" style="color:#757575">Sounds fun, let's do it!</div>
+          </div>
+        </div>
+
+        <!-- blocked -->
+        <div class="ct">
+          <div class="ct-avatar" style="position:relative">
+            <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=120&h=120&fit=crop" alt="">
+            <div class="ct-blocked-overlay"></div>
+          </div>
+          <div class="ct-info">
+            <div class="ct-name" style="color:#B3B3B3">Taylor</div>
+            <div class="ct-preview" style="color:#B3B3B3">This person is blocked</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="#757575" stroke-width="2"/><line x1="5" y1="15" x2="15" y2="5" stroke="#757575" stroke-width="2"/></svg>
+        </div>
+
+        <!-- unmatched -->
+        <div class="ct">
+          <div class="ct-avatar"><img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=120&h=120&fit=crop" alt=""></div>
+          <div class="ct-info">
+            <div class="ct-name" style="color:#757575">Riley</div>
+            <div class="ct-preview" style="color:#757575;font-style:italic">You have been unmatched</div>
+          </div>
+          <svg width="20" height="22" viewBox="-2 0 24 22" fill="none"><path d="M3 18L19 2" stroke="#757575" stroke-width="2" stroke-linecap="round"/><path d="M19.0176 5.39551C19.1155 5.57364 19.2051 5.75685 19.2832 5.94531C19.5639 6.62282 19.708 7.34965 19.708 8.08301C19.708 8.81618 19.5638 9.54238 19.2832 10.2197C19.0025 10.8972 18.591 11.5138 18.0723 12.0322L18.0713 12.0313L10.7061 19.3984C10.3156 19.7888 9.68151 19.7888 9.29102 19.3984L7.15332 17.2598L8.56738 15.8457L9.99805 17.2764L16.6582 10.6172L16.7803 10.4893C17.0561 10.1849 17.278 9.83434 17.4355 9.4541C17.6156 9.01948 17.708 8.55344 17.708 8.08301C17.708 7.68139 17.6404 7.28275 17.5088 6.9043L19.0176 5.39551ZM14.123 2.49805C14.8564 2.49805 15.5832 2.64214 16.2607 2.92285C16.8026 3.14736 17.3035 3.45703 17.748 3.83691L16.3281 5.25684C16.074 5.05849 15.7941 4.89439 15.4951 4.77051C15.0603 4.59037 14.5937 4.49805 14.123 4.49805C13.6526 4.4981 13.1866 4.59046 12.752 4.77051C12.3172 4.95068 11.9216 5.21498 11.5889 5.54785V5.54883L10.7061 6.43164C10.3156 6.822 9.68151 6.822 9.29102 6.43164L8.4082 5.54883C7.736 4.87662 6.82369 4.49805 5.87305 4.49805C4.92256 4.49816 4.01097 4.87672 3.33887 5.54883C2.6669 6.221 2.28906 7.13255 2.28906 8.08301C2.28915 9.03345 2.66684 9.94508 3.33887 10.6172L7.15332 14.4316L5.73926 15.8457L1.9248 12.0313C0.877706 10.9841 0.289154 9.56388 0.289062 8.08301C0.289062 6.60199 0.8776 5.18106 1.9248 4.13379C2.97196 3.08675 4.39223 2.49816 5.87305 2.49805C7.35405 2.49805 8.775 3.08661 9.82227 4.13379L9.99805 4.30957L10.1748 4.13379C10.6932 3.61526 11.309 3.20353 11.9863 2.92285C12.6637 2.64222 13.3898 2.4981 14.123 2.49805Z" fill="#757575"/></svg>
+        </div>
+
+      </div>
+      <div class="note" style="margin-top:8px">new_unread · read · new_match · message_sent · blocked · unmatched</div>
+    </section>
+
+    <!-- ══ CARD ══ -->
+    <section class="section" id="card">
+      <h2 class="section-title">Card</h2>
+      <div class="sub">
+        <div class="sub-title">Default (padding:20)</div>
+        <div class="card">
+          <div style="font-size:16px;font-weight:600;color:#1E1E1E">Ratings</div>
+          <div style="background:#F5F5F5;border-radius:8px;padding:14px;font-size:14px;color:#757575;text-align:center">
+            Your personalized information will be shown to matches here.
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Elevated (shadow: main.dark #5E1B27 @ 8% · offset 0,4 · radius 12)</div>
+        <div class="card" style="box-shadow:0 4px 12px rgba(94,27,39,0.08)">
+          <div style="font-size:16px;font-weight:600;color:#1E1E1E">Elevated Card</div>
+          <div style="font-size:14px;color:#757575">bg=#FFF8FA · radius=20 · border=#FFEBF2</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ BOTTOM TOOLBAR ══ -->
+    <section class="section" id="toolbar">
+      <h2 class="section-title">BottomToolbar</h2>
+      <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;display:inline-block">
+        <div style="height:64px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;width:393px;color:#aaa;font-size:13px">App content</div>
+        <div class="toolbar">
+          <div class="toolbar-inner">
+            <!-- Chats -->
+            <div class="tb-btn">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z" stroke="#F3F3F3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <!-- Home (active) — ProofIcon #DA4570 -->
+            <div class="tb-btn">
+              <svg width="28" height="15.28" viewBox="0 0 28 15.2758" fill="none">
+                <path d="M7.80399 0C8.11963 1.25145e-05 8.42793 0.0161816 8.72905 0.0470067L8.72683 0.0594235C11.4165 0.576665 12.8737 1.80907 13.7188 3.14412C13.755 3.20777 13.793 3.27349 13.8324 3.34191C13.907 3.47064 13.9795 3.59966 14.0497 3.72905C14.6134 4.84772 14.8203 5.97426 15.0053 6.83459C15.0058 6.84744 15.0071 6.86028 15.0075 6.87317H15.0137C15.0539 7.0585 15.0928 7.23112 15.1348 7.38803C15.3733 8.278 15.6669 9.63073 16.3898 10.6922C16.7552 11.2288 17.2349 11.6997 17.8794 12.0044C18.2541 12.1816 18.6792 12.2991 19.1619 12.3441C19.4916 12.4089 19.8365 12.4421 20.1969 12.4421C21.0881 12.4421 21.8776 12.2486 22.5654 11.8612C23.2629 11.464 23.8104 10.9067 24.2075 10.1898C24.6047 9.47296 24.8031 8.62538 24.8031 7.64701C24.8031 6.66857 24.6047 5.82064 24.2075 5.10377C23.8104 4.37728 23.2629 3.82029 22.5654 3.43282C21.8776 3.04535 21.0881 2.85144 20.1969 2.85144C19.3057 2.85144 18.5112 3.04532 17.8137 3.43282C17.1447 3.80976 16.6136 4.34744 16.2195 5.04523C16.0386 4.19065 15.7273 3.37738 15.2825 2.6102C15.164 2.40436 15.0372 2.2059 14.9042 2.0133C15.5421 1.44033 16.2699 0.978714 17.0874 0.628381C18.0367 0.221539 19.0781 0.0181846 20.2115 0.0181818C21.713 0.0181976 23.05 0.366823 24.2222 1.0643C25.404 1.75211 26.3289 2.67745 26.9973 3.83991C27.6658 4.99271 28 6.26171 28 7.64701C28 8.66409 27.8065 9.63277 27.4191 10.553C27.0413 11.4733 26.5033 12.287 25.8058 12.9942C25.1083 13.7014 24.2851 14.2588 23.3357 14.6656C22.3863 15.0725 21.34 15.2758 20.1969 15.2758C20.1689 15.2758 20.141 15.2747 20.1131 15.2745C20.1066 15.2742 20.1001 15.2743 20.0936 15.2741C18.6337 15.2586 17.3263 14.9159 16.1716 14.2439C16.0549 14.1744 15.9366 14.0908 15.8177 13.9973C15.3074 13.6524 14.8809 13.2588 14.5242 12.8404C13.4487 11.5788 13.0184 10.1167 12.7738 9.20399C12.7098 8.96485 12.6565 8.66315 12.6004 8.33304C12.5437 7.99897 12.4828 7.62916 12.4022 7.24036C12.2408 6.46181 12.0035 5.62337 11.5805 4.88781C11.2664 4.34178 10.8508 3.85426 10.2869 3.48914C10.2445 3.4636 10.2014 3.43885 10.1579 3.41463C9.47014 3.02719 8.68048 2.8333 7.78936 2.83326C6.8982 2.83326 6.10366 3.02722 5.40621 3.41463C4.71848 3.80209 4.17589 4.35915 3.77871 5.08559C3.39121 5.80246 3.19734 6.65039 3.19734 7.62882C3.19735 8.60722 3.39618 9.45476 3.79335 10.1716C4.19053 10.8884 4.73306 11.4458 5.42084 11.843C6.11826 12.2304 6.90794 12.4239 7.78936 12.4239C8.68045 12.4239 9.47015 12.2304 10.1579 11.843C10.7117 11.5276 11.1703 11.1107 11.5348 10.5938C11.6996 11.0818 11.8987 11.5738 12.1446 12.0514C12.385 12.5221 12.6638 12.9613 12.9787 13.3698C12.377 13.8931 11.6936 14.3194 10.9282 14.6474C9.97886 15.0543 8.93237 15.2576 7.78936 15.2576C6.28788 15.2576 4.9459 14.9139 3.76408 14.2262C2.59193 13.5287 1.67154 12.6033 1.0031 11.4506C0.334677 10.2881 1.11444e-05 9.01411 0 7.62882C0 6.60195 0.189371 5.63302 0.567184 4.72239C0.95468 3.80214 1.49721 2.9883 2.19468 2.28115C2.90184 1.57402 3.7305 1.01705 4.67982 0.6102C5.6291 0.203424 6.67069 0 7.80399 0Z" fill="#DA4570"/>
+              </svg>
+            </div>
+            <!-- Profile -->
+            <div class="tb-btn">
+              <div class="tb-avatar">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=48" alt="">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:8px">Background #202020 · height 56px · gap 59px · center = ProofIcon (double-figure-8 logo) · active=brand-500, inactive=#F3F3F3</div>
+    </section>
+
+    <!-- ══ LOGO ══ -->
+    <section class="section" id="logo">
+      <h2 class="section-title">Logo</h2>
+      <div class="row" style="align-items:flex-start;gap:24px;flex-wrap:wrap">
+        <div class="col">
+          <!-- On light: default color #1E1E1E (pass custom color prop) -->
+          <svg class="logo-svg" width="120" height="51.3" viewBox="0 0 283 121" fill="none">
+            <path d="M250.736 94.08V20.352C250.736 14.0373 252.549 9.06666 256.176 5.43999C259.845 1.81333 264.901 0 271.344 0C273.691 0 275.824 0.255999 277.744 0.767998C278.658 0.986482 279.539 1.2512 280.388 1.56214C282.087 2.18443 282.896 4.04012 282.481 5.80123L281.446 10.1913C281.001 12.0802 278.871 12.965 276.976 12.544C275.824 12.288 274.693 12.16 273.584 12.16C270.981 12.16 268.848 12.8213 267.184 14.144C265.563 15.4667 264.752 17.728 264.752 20.928V30.72H277.392C279.601 30.72 281.392 32.5109 281.392 34.72V38.368C281.392 40.5771 279.601 42.368 277.392 42.368H264.752V94.08H250.736ZM242 42.368C239.791 42.368 238 40.5771 238 38.368V34.72C238 32.5109 239.791 30.72 242 30.72H252.592V42.368H242Z" fill="#1E1E1E"/>
+            <path d="M0 120.881V34.6407C0 32.4316 1.79086 30.6407 4 30.6407H8.672C10.8811 30.6407 12.672 32.4316 12.672 34.6407V39.5367C15.1893 36.3367 18.4107 33.734 22.336 31.7287C26.2613 29.7234 31.104 28.7207 36.864 28.7207C43.0507 28.7207 48.5333 30.1927 53.312 33.1367C58.1333 36.038 61.888 40.0274 64.576 45.1047C67.264 50.1394 68.608 55.878 68.608 62.3207C68.608 66.9714 67.84 71.3447 66.304 75.4407C64.768 79.494 62.5707 83.0567 59.712 86.1287C56.896 89.2007 53.5253 91.6114 49.6 93.3607C45.7173 95.0674 41.408 95.9207 36.672 95.9207C31.7227 95.9207 27.3707 95.0247 23.616 93.2327C19.8613 91.4407 16.6613 89.03 14.016 86.0007V120.881H0ZM34.304 83.4407C38.2293 83.4407 41.7067 82.5874 44.736 80.8807C47.808 79.1314 50.1973 76.678 51.904 73.5207C53.6533 70.3634 54.528 66.63 54.528 62.3207C54.528 58.0114 53.6533 54.278 51.904 51.1207C50.1547 47.9207 47.744 45.4674 44.672 43.7607C41.6427 42.054 38.1867 41.2007 34.304 41.2007C30.3787 41.2007 26.88 42.054 23.808 43.7607C20.7787 45.4674 18.3893 47.9207 16.64 51.1207C14.8907 54.278 14.016 58.0114 14.016 62.3207C14.016 66.63 14.8907 70.3634 16.64 73.5207C18.3893 76.678 20.7787 79.1314 23.808 80.8807C26.88 82.5874 30.3787 83.4407 34.304 83.4407Z" fill="#1E1E1E"/>
+            <path d="M74.6094 94.0647V34.7047C74.6094 32.4956 76.4002 30.7047 78.6094 30.7047H84.6894C86.8985 30.7047 88.6894 32.4956 88.6894 34.7047V39.4727C91.0787 35.5047 93.98 32.7314 97.3934 31.1527C100.807 29.5314 104.476 28.7207 108.401 28.7207C109.681 28.7207 110.897 28.7847 112.049 28.9127C113.961 29.1251 115.193 30.9336 114.949 32.8411L114.029 40.0406C113.763 42.1226 111.689 43.4549 109.617 43.1207C108.295 42.9074 106.972 42.8007 105.649 42.8007C100.743 42.8007 96.6894 44.3154 93.4894 47.3447C90.2894 50.3314 88.6894 54.406 88.6894 59.5687V94.0647H74.6094Z" fill="#1E1E1E"/>
+            <path d="M148.368 28C149.76 28 151.119 28.069 152.446 28.2051L152.436 28.2627C164.298 30.5441 170.719 35.9835 174.438 41.873C174.593 42.1456 174.753 42.4284 174.921 42.7207C175.259 43.3045 175.588 43.8897 175.905 44.4766C178.371 49.3916 179.279 54.3362 180.092 58.1133C180.094 58.1663 180.097 58.2193 180.099 58.2725H180.126C180.303 59.0882 180.473 59.8483 180.658 60.5391C181.708 64.4587 183 70.4174 186.184 75.0928C187.793 77.4559 189.906 79.5301 192.745 80.8721C194.398 81.6534 196.273 82.1722 198.402 82.3701C199.852 82.6542 201.368 82.7998 202.952 82.7998C206.877 82.7998 210.355 81.9467 213.384 80.2402C216.456 78.4909 218.867 76.0372 220.616 72.8799C222.365 69.7227 223.24 65.9897 223.24 61.6807C223.24 57.3714 222.365 53.6378 220.616 50.4805C218.867 47.2805 216.456 44.8268 213.384 43.1201C210.355 41.4137 206.877 40.5605 202.952 40.5605C199.027 40.5606 195.528 41.4135 192.456 43.1201C189.511 44.7793 187.173 47.1454 185.438 50.2158C184.641 46.4543 183.267 42.8762 181.309 39.499H181.308C180.786 38.592 180.231 37.7139 179.646 36.8652C182.454 34.3433 185.657 32.3108 189.256 30.7686C193.437 28.9766 198.025 28.0801 203.017 28.0801C209.63 28.0801 215.517 29.6167 220.68 32.6885C225.885 35.7178 229.96 39.7922 232.904 44.9121C235.848 49.9894 237.32 55.5793 237.32 61.6807C237.32 66.1605 236.466 70.4273 234.76 74.4805C233.096 78.5336 230.728 82.1179 227.656 85.2324C224.584 88.3469 220.957 90.7998 216.776 92.5918C212.595 94.3837 207.987 95.2803 202.952 95.2803C202.829 95.2803 202.705 95.2784 202.582 95.2773V95.2793C202.567 95.2787 202.553 95.277 202.538 95.2764C196.092 95.2143 190.321 93.7021 185.225 90.7363C184.715 90.433 184.198 90.0696 183.679 89.6621C181.424 88.1404 179.542 86.4012 177.967 84.5537C173.23 78.9974 171.335 72.5588 170.258 68.5391C169.976 67.4856 169.742 66.1556 169.495 64.7012C169.245 63.2299 168.977 61.602 168.622 59.8896C167.911 56.4607 166.866 52.768 165.003 49.5283C163.639 47.1565 161.84 45.0344 159.408 43.4336C159.188 43.2988 158.964 43.1666 158.736 43.04C155.707 41.3335 152.23 40.4805 148.305 40.4805C144.379 40.4805 140.881 41.3335 137.809 43.04C134.779 44.7467 132.39 47.2004 130.641 50.4004C128.934 53.5577 128.08 57.2913 128.08 61.6006C128.08 65.9096 128.955 69.6427 130.704 72.7998C132.453 75.957 134.843 78.4108 137.872 80.1602C140.944 81.8668 144.422 82.7207 148.305 82.7207C152.23 82.7207 155.707 81.8668 158.736 80.1602C161.176 78.7712 163.195 76.9368 164.801 74.6602C165.527 76.8089 166.402 78.976 167.484 81.0791H167.485C168.544 83.1524 169.77 85.089 171.157 86.8887C168.508 89.1924 165.499 91.0683 162.129 92.5127C157.948 94.3047 153.339 95.2002 148.305 95.2002C141.691 95.2002 135.782 93.6856 130.576 90.6562C125.414 87.5843 121.36 83.5098 118.416 78.4326C115.472 73.3127 114 67.7018 114 61.6006C114 57.0779 114.832 52.8105 116.496 48.7998C118.203 44.7466 120.592 41.1624 123.664 38.0479C126.779 34.9332 130.427 32.4805 134.608 30.6885C138.79 28.8965 143.376 28 148.368 28Z" fill="#1E1E1E"/>
+          </svg>
+          <div class="note">On light · #1E1E1E · width=120</div>
+        </div>
+        <div style="background:#1a1a1a;padding:20px;border-radius:10px">
+          <svg class="logo-svg" width="120" height="51.3" viewBox="0 0 283 121" fill="none">
+            <path d="M250.736 94.08V20.352C250.736 14.0373 252.549 9.06666 256.176 5.43999C259.845 1.81333 264.901 0 271.344 0C273.691 0 275.824 0.255999 277.744 0.767998C278.658 0.986482 279.539 1.2512 280.388 1.56214C282.087 2.18443 282.896 4.04012 282.481 5.80123L281.446 10.1913C281.001 12.0802 278.871 12.965 276.976 12.544C275.824 12.288 274.693 12.16 273.584 12.16C270.981 12.16 268.848 12.8213 267.184 14.144C265.563 15.4667 264.752 17.728 264.752 20.928V30.72H277.392C279.601 30.72 281.392 32.5109 281.392 34.72V38.368C281.392 40.5771 279.601 42.368 277.392 42.368H264.752V94.08H250.736ZM242 42.368C239.791 42.368 238 40.5771 238 38.368V34.72C238 32.5109 239.791 30.72 242 30.72H252.592V42.368H242Z" fill="#F3F3F3"/>
+            <path d="M0 120.881V34.6407C0 32.4316 1.79086 30.6407 4 30.6407H8.672C10.8811 30.6407 12.672 32.4316 12.672 34.6407V39.5367C15.1893 36.3367 18.4107 33.734 22.336 31.7287C26.2613 29.7234 31.104 28.7207 36.864 28.7207C43.0507 28.7207 48.5333 30.1927 53.312 33.1367C58.1333 36.038 61.888 40.0274 64.576 45.1047C67.264 50.1394 68.608 55.878 68.608 62.3207C68.608 66.9714 67.84 71.3447 66.304 75.4407C64.768 79.494 62.5707 83.0567 59.712 86.1287C56.896 89.2007 53.5253 91.6114 49.6 93.3607C45.7173 95.0674 41.408 95.9207 36.672 95.9207C31.7227 95.9207 27.3707 95.0247 23.616 93.2327C19.8613 91.4407 16.6613 89.03 14.016 86.0007V120.881H0ZM34.304 83.4407C38.2293 83.4407 41.7067 82.5874 44.736 80.8807C47.808 79.1314 50.1973 76.678 51.904 73.5207C53.6533 70.3634 54.528 66.63 54.528 62.3207C54.528 58.0114 53.6533 54.278 51.904 51.1207C50.1547 47.9207 47.744 45.4674 44.672 43.7607C41.6427 42.054 38.1867 41.2007 34.304 41.2007C30.3787 41.2007 26.88 42.054 23.808 43.7607C20.7787 45.4674 18.3893 47.9207 16.64 51.1207C14.8907 54.278 14.016 58.0114 14.016 62.3207C14.016 66.63 14.8907 70.3634 16.64 73.5207C18.3893 76.678 20.7787 79.1314 23.808 80.8807C26.88 82.5874 30.3787 83.4407 34.304 83.4407Z" fill="#F3F3F3"/>
+            <path d="M74.6094 94.0647V34.7047C74.6094 32.4956 76.4002 30.7047 78.6094 30.7047H84.6894C86.8985 30.7047 88.6894 32.4956 88.6894 34.7047V39.4727C91.0787 35.5047 93.98 32.7314 97.3934 31.1527C100.807 29.5314 104.476 28.7207 108.401 28.7207C109.681 28.7207 110.897 28.7847 112.049 28.9127C113.961 29.1251 115.193 30.9336 114.949 32.8411L114.029 40.0406C113.763 42.1226 111.689 43.4549 109.617 43.1207C108.295 42.9074 106.972 42.8007 105.649 42.8007C100.743 42.8007 96.6894 44.3154 93.4894 47.3447C90.2894 50.3314 88.6894 54.406 88.6894 59.5687V94.0647H74.6094Z" fill="#F3F3F3"/>
+            <path d="M148.368 28C149.76 28 151.119 28.069 152.446 28.2051L152.436 28.2627C164.298 30.5441 170.719 35.9835 174.438 41.873C174.593 42.1456 174.753 42.4284 174.921 42.7207C175.259 43.3045 175.588 43.8897 175.905 44.4766C178.371 49.3916 179.279 54.3362 180.092 58.1133C180.094 58.1663 180.097 58.2193 180.099 58.2725H180.126C180.303 59.0882 180.473 59.8483 180.658 60.5391C181.708 64.4587 183 70.4174 186.184 75.0928C187.793 77.4559 189.906 79.5301 192.745 80.8721C194.398 81.6534 196.273 82.1722 198.402 82.3701C199.852 82.6542 201.368 82.7998 202.952 82.7998C206.877 82.7998 210.355 81.9467 213.384 80.2402C216.456 78.4909 218.867 76.0372 220.616 72.8799C222.365 69.7227 223.24 65.9897 223.24 61.6807C223.24 57.3714 222.365 53.6378 220.616 50.4805C218.867 47.2805 216.456 44.8268 213.384 43.1201C210.355 41.4137 206.877 40.5605 202.952 40.5605C199.027 40.5606 195.528 41.4135 192.456 43.1201C189.511 44.7793 187.173 47.1454 185.438 50.2158C184.641 46.4543 183.267 42.8762 181.309 39.499H181.308C180.786 38.592 180.231 37.7139 179.646 36.8652C182.454 34.3433 185.657 32.3108 189.256 30.7686C193.437 28.9766 198.025 28.0801 203.017 28.0801C209.63 28.0801 215.517 29.6167 220.68 32.6885C225.885 35.7178 229.96 39.7922 232.904 44.9121C235.848 49.9894 237.32 55.5793 237.32 61.6807C237.32 66.1605 236.466 70.4273 234.76 74.4805C233.096 78.5336 230.728 82.1179 227.656 85.2324C224.584 88.3469 220.957 90.7998 216.776 92.5918C212.595 94.3837 207.987 95.2803 202.952 95.2803C202.829 95.2803 202.705 95.2784 202.582 95.2773V95.2793C202.567 95.2787 202.553 95.277 202.538 95.2764C196.092 95.2143 190.321 93.7021 185.225 90.7363C184.715 90.433 184.198 90.0696 183.679 89.6621C181.424 88.1404 179.542 86.4012 177.967 84.5537C173.23 78.9974 171.335 72.5588 170.258 68.5391C169.976 67.4856 169.742 66.1556 169.495 64.7012C169.245 63.2299 168.977 61.602 168.622 59.8896C167.911 56.4607 166.866 52.768 165.003 49.5283C163.639 47.1565 161.84 45.0344 159.408 43.4336C159.188 43.2988 158.964 43.1666 158.736 43.04C155.707 41.3335 152.23 40.4805 148.305 40.4805C144.379 40.4805 140.881 41.3335 137.809 43.04C134.779 44.7467 132.39 47.2004 130.641 50.4004C128.934 53.5577 128.08 57.2913 128.08 61.6006C128.08 65.9096 128.955 69.6427 130.704 72.7998C132.453 75.957 134.843 78.4108 137.872 80.1602C140.944 81.8668 144.422 82.7207 148.305 82.7207C152.23 82.7207 155.707 81.8668 158.736 80.1602C161.176 78.7712 163.195 76.9368 164.801 74.6602C165.527 76.8089 166.402 78.976 167.484 81.0791H167.485C168.544 83.1524 169.77 85.089 171.157 86.8887C168.508 89.1924 165.499 91.0683 162.129 92.5127C157.948 94.3047 153.339 95.2002 148.305 95.2002C141.691 95.2002 135.782 93.6856 130.576 90.6562C125.414 87.5843 121.36 83.5098 118.416 78.4326C115.472 73.3127 114 67.7018 114 61.6006C114 57.0779 114.832 52.8105 116.496 48.7998C118.203 44.7466 120.592 41.1624 123.664 38.0479C126.779 34.9332 130.427 32.4805 134.608 30.6885C138.79 28.8965 143.376 28 148.368 28Z" fill="#F3F3F3"/>
+          </svg>
+          <div class="note" style="color:#666">On dark · #F3F3F3</div>
+        </div>
+        <div style="background:linear-gradient(180deg,#C94F7C,#3C0D0E);padding:20px;border-radius:10px">
+          <svg class="logo-svg" width="120" height="51.3" viewBox="0 0 283 121" fill="none">
+            <path d="M250.736 94.08V20.352C250.736 14.0373 252.549 9.06666 256.176 5.43999C259.845 1.81333 264.901 0 271.344 0C273.691 0 275.824 0.255999 277.744 0.767998C278.658 0.986482 279.539 1.2512 280.388 1.56214C282.087 2.18443 282.896 4.04012 282.481 5.80123L281.446 10.1913C281.001 12.0802 278.871 12.965 276.976 12.544C275.824 12.288 274.693 12.16 273.584 12.16C270.981 12.16 268.848 12.8213 267.184 14.144C265.563 15.4667 264.752 17.728 264.752 20.928V30.72H277.392C279.601 30.72 281.392 32.5109 281.392 34.72V38.368C281.392 40.5771 279.601 42.368 277.392 42.368H264.752V94.08H250.736ZM242 42.368C239.791 42.368 238 40.5771 238 38.368V34.72C238 32.5109 239.791 30.72 242 30.72H252.592V42.368H242Z" fill="#fff"/>
+            <path d="M0 120.881V34.6407C0 32.4316 1.79086 30.6407 4 30.6407H8.672C10.8811 30.6407 12.672 32.4316 12.672 34.6407V39.5367C15.1893 36.3367 18.4107 33.734 22.336 31.7287C26.2613 29.7234 31.104 28.7207 36.864 28.7207C43.0507 28.7207 48.5333 30.1927 53.312 33.1367C58.1333 36.038 61.888 40.0274 64.576 45.1047C67.264 50.1394 68.608 55.878 68.608 62.3207C68.608 66.9714 67.84 71.3447 66.304 75.4407C64.768 79.494 62.5707 83.0567 59.712 86.1287C56.896 89.2007 53.5253 91.6114 49.6 93.3607C45.7173 95.0674 41.408 95.9207 36.672 95.9207C31.7227 95.9207 27.3707 95.0247 23.616 93.2327C19.8613 91.4407 16.6613 89.03 14.016 86.0007V120.881H0ZM34.304 83.4407C38.2293 83.4407 41.7067 82.5874 44.736 80.8807C47.808 79.1314 50.1973 76.678 51.904 73.5207C53.6533 70.3634 54.528 66.63 54.528 62.3207C54.528 58.0114 53.6533 54.278 51.904 51.1207C50.1547 47.9207 47.744 45.4674 44.672 43.7607C41.6427 42.054 38.1867 41.2007 34.304 41.2007C30.3787 41.2007 26.88 42.054 23.808 43.7607C20.7787 45.4674 18.3893 47.9207 16.64 51.1207C14.8907 54.278 14.016 58.0114 14.016 62.3207C14.016 66.63 14.8907 70.3634 16.64 73.5207C18.3893 76.678 20.7787 79.1314 23.808 80.8807C26.88 82.5874 30.3787 83.4407 34.304 83.4407Z" fill="#fff"/>
+            <path d="M74.6094 94.0647V34.7047C74.6094 32.4956 76.4002 30.7047 78.6094 30.7047H84.6894C86.8985 30.7047 88.6894 32.4956 88.6894 34.7047V39.4727C91.0787 35.5047 93.98 32.7314 97.3934 31.1527C100.807 29.5314 104.476 28.7207 108.401 28.7207C109.681 28.7207 110.897 28.7847 112.049 28.9127C113.961 29.1251 115.193 30.9336 114.949 32.8411L114.029 40.0406C113.763 42.1226 111.689 43.4549 109.617 43.1207C108.295 42.9074 106.972 42.8007 105.649 42.8007C100.743 42.8007 96.6894 44.3154 93.4894 47.3447C90.2894 50.3314 88.6894 54.406 88.6894 59.5687V94.0647H74.6094Z" fill="#fff"/>
+            <path d="M148.368 28C149.76 28 151.119 28.069 152.446 28.2051L152.436 28.2627C164.298 30.5441 170.719 35.9835 174.438 41.873C174.593 42.1456 174.753 42.4284 174.921 42.7207C175.259 43.3045 175.588 43.8897 175.905 44.4766C178.371 49.3916 179.279 54.3362 180.092 58.1133C180.094 58.1663 180.097 58.2193 180.099 58.2725H180.126C180.303 59.0882 180.473 59.8483 180.658 60.5391C181.708 64.4587 183 70.4174 186.184 75.0928C187.793 77.4559 189.906 79.5301 192.745 80.8721C194.398 81.6534 196.273 82.1722 198.402 82.3701C199.852 82.6542 201.368 82.7998 202.952 82.7998C206.877 82.7998 210.355 81.9467 213.384 80.2402C216.456 78.4909 218.867 76.0372 220.616 72.8799C222.365 69.7227 223.24 65.9897 223.24 61.6807C223.24 57.3714 222.365 53.6378 220.616 50.4805C218.867 47.2805 216.456 44.8268 213.384 43.1201C210.355 41.4137 206.877 40.5605 202.952 40.5605C199.027 40.5606 195.528 41.4135 192.456 43.1201C189.511 44.7793 187.173 47.1454 185.438 50.2158C184.641 46.4543 183.267 42.8762 181.309 39.499H181.308C180.786 38.592 180.231 37.7139 179.646 36.8652C182.454 34.3433 185.657 32.3108 189.256 30.7686C193.437 28.9766 198.025 28.0801 203.017 28.0801C209.63 28.0801 215.517 29.6167 220.68 32.6885C225.885 35.7178 229.96 39.7922 232.904 44.9121C235.848 49.9894 237.32 55.5793 237.32 61.6807C237.32 66.1605 236.466 70.4273 234.76 74.4805C233.096 78.5336 230.728 82.1179 227.656 85.2324C224.584 88.3469 220.957 90.7998 216.776 92.5918C212.595 94.3837 207.987 95.2803 202.952 95.2803C202.829 95.2803 202.705 95.2784 202.582 95.2773V95.2793C202.567 95.2787 202.553 95.277 202.538 95.2764C196.092 95.2143 190.321 93.7021 185.225 90.7363C184.715 90.433 184.198 90.0696 183.679 89.6621C181.424 88.1404 179.542 86.4012 177.967 84.5537C173.23 78.9974 171.335 72.5588 170.258 68.5391C169.976 67.4856 169.742 66.1556 169.495 64.7012C169.245 63.2299 168.977 61.602 168.622 59.8896C167.911 56.4607 166.866 52.768 165.003 49.5283C163.639 47.1565 161.84 45.0344 159.408 43.4336C159.188 43.2988 158.964 43.1666 158.736 43.04C155.707 41.3335 152.23 40.4805 148.305 40.4805C144.379 40.4805 140.881 41.3335 137.809 43.04C134.779 44.7467 132.39 47.2004 130.641 50.4004C128.934 53.5577 128.08 57.2913 128.08 61.6006C128.08 65.9096 128.955 69.6427 130.704 72.7998C132.453 75.957 134.843 78.4108 137.872 80.1602C140.944 81.8668 144.422 82.7207 148.305 82.7207C152.23 82.7207 155.707 81.8668 158.736 80.1602C161.176 78.7712 163.195 76.9368 164.801 74.6602C165.527 76.8089 166.402 78.976 167.484 81.0791H167.485C168.544 83.1524 169.77 85.089 171.157 86.8887C168.508 89.1924 165.499 91.0683 162.129 92.5127C157.948 94.3047 153.339 95.2002 148.305 95.2002C141.691 95.2002 135.782 93.6856 130.576 90.6562C125.414 87.5843 121.36 83.5098 118.416 78.4326C115.472 73.3127 114 67.7018 114 61.6006C114 57.0779 114.832 52.8105 116.496 48.7998C118.203 44.7466 120.592 41.1624 123.664 38.0479C126.779 34.9332 130.427 32.4805 134.608 30.6885C138.79 28.8965 143.376 28 148.368 28Z" fill="#fff"/>
+          </svg>
+          <div class="note" style="color:rgba(255,255,255,0.5)">On gradient · #fff</div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:8px">SVG wordmark 283×121 viewBox · width=120 default · color prop fills all paths</div>
+    </section>
+
+    <!-- ══ ICON / ICONBUTTON ══ -->
+    <section class="section" id="icon">
+      <h2 class="section-title">Icon / IconButton</h2>
+      <div class="sub">
+        <div class="sub-title">Icon container — sized wrapper (14 / 16 / 20 / 24 / 32 / 40 / 48)</div>
+        <div class="row" style="align-items:center">
+          <div class="pv">
+            <div class="icon-container" style="width:14px;height:14px">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#9CA3AF" stroke-width="2"/></svg>
+            </div>
+            <div class="pv-label">14</div>
+          </div>
+          <div class="pv">
+            <div class="icon-container" style="width:20px;height:20px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#9CA3AF" stroke-width="2"/></svg>
+            </div>
+            <div class="pv-label">20</div>
+          </div>
+          <div class="pv">
+            <div class="icon-container" style="width:24px;height:24px">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#9CA3AF" stroke-width="2"/></svg>
+            </div>
+            <div class="pv-label">24</div>
+          </div>
+          <div class="pv">
+            <div class="icon-container" style="width:32px;height:32px">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#9CA3AF" stroke-width="2"/></svg>
+            </div>
+            <div class="pv-label">32</div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">IconButton — medium (36px) · 3 variants</div>
+        <div class="row">
+          <div class="pv">
+            <div class="icon-btn icon-btn-md icon-btn-primary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="pv-label">primary</div>
+          </div>
+          <div class="pv">
+            <div class="icon-btn icon-btn-md icon-btn-neutral">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#4B5563" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="pv-label">neutral</div>
+          </div>
+          <div class="pv">
+            <div class="icon-btn icon-btn-md icon-btn-subtle">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#4B5563" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="pv-label">subtle</div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">IconButton — small (28px) · disabled</div>
+        <div class="row">
+          <div class="pv">
+            <div class="icon-btn icon-btn-sm icon-btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="pv-label">sm · primary</div>
+          </div>
+          <div class="pv">
+            <div class="icon-btn icon-btn-sm icon-btn-neutral">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#4B5563" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="pv-label">sm · neutral</div>
+          </div>
+          <div class="pv" style="opacity:0.4">
+            <div class="icon-btn icon-btn-md icon-btn-neutral">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="#4B5563" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="pv-label">disabled</div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">DestructiveIconButton — red-100 bg</div>
+        <div class="row">
+          <div class="pv">
+            <div class="icon-btn icon-btn-md icon-btn-destruct">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="pv-label">md</div>
+          </div>
+          <div class="pv">
+            <div class="icon-btn icon-btn-sm icon-btn-destruct">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#DC2626" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <div class="pv-label">sm</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">Icon: sized flex container · IconButton: border-radius 50% · primary=brand-500 · neutral=gray-100 · subtle=transparent · sm=28px · md=36px · DestructiveIconButton: red-100 bg</div>
+    </section>
+
+    <!-- ══ SEARCH ══ -->
+    <section class="section" id="search">
+      <h2 class="section-title">Search</h2>
+      <div class="sub">
+        <div class="sub-title">Default (light, unfocused)</div>
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Search…">
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Focused with value + clear button</div>
+        <div class="search-wrap" style="border-color:var(--brand-500)">
+          <span class="search-icon">🔍</span>
+          <input type="text" value="Hiking" readonly>
+          <span class="search-clear">✕</span>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">With results dropdown</div>
+        <div style="position:relative;width:280px">
+          <div class="search-wrap" style="border-color:var(--brand-500)">
+            <span class="search-icon">🔍</span>
+            <input type="text" value="Hi" readonly>
+            <span class="search-clear">✕</span>
+          </div>
+          <div class="search-results">
+            <div class="search-result-item">Hiking</div>
+            <div class="search-result-item">History</div>
+            <div class="search-result-item">Hip-hop</div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">On dark (onDark=true · no border · white bg)</div>
+        <div class="on-dark">
+          <div class="search-wrap dark" style="background:#fff;width:280px">
+            <span class="search-icon" style="color:#D1D5DB">🔍</span>
+            <input type="text" placeholder="Search…" style="font-style:italic;color:#D1D5DB;background:transparent">
+          </div>
+        </div>
+      </div>
+      <div class="note">border-radius 14 · 1.5px brand-300 border · padding-h 12 · focused border = brand-500</div>
+    </section>
+
+    <!-- ══ SELECT ══ -->
+    <section class="section" id="select">
+      <h2 class="section-title">Select</h2>
+      <div class="sub">
+        <div class="sub-title">Placeholder state</div>
+        <div class="select-wrap">
+          <span class="select-text" style="color:var(--brand-400);font-style:italic">Select gender…</span>
+          <span class="select-arrow">▼</span>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">With value</div>
+        <div class="select-wrap">
+          <span class="select-text" style="color:var(--brand-800)">Man</span>
+          <span class="select-arrow">▼</span>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Invalid state</div>
+        <div class="select-wrap invalid">
+          <span class="select-text" style="color:var(--brand-800)">Choose…</span>
+          <span class="select-arrow" style="color:#DC2626">▼</span>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Disabled</div>
+        <div class="select-wrap" style="opacity:0.4">
+          <span class="select-text" style="color:var(--brand-400)">Select…</span>
+          <span class="select-arrow">▼</span>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Sheet picker (opens on press)</div>
+        <div class="select-sheet">
+          <div class="select-sheet-done">Done</div>
+          <div class="select-sheet-item">Man</div>
+          <div class="select-sheet-item selected">Woman</div>
+          <div class="select-sheet-item">Non-binary</div>
+          <div class="select-sheet-item">Prefer not to say</div>
+        </div>
+      </div>
+      <div class="note">border-radius 14 · 1.5px brand-300 border · padding 16 · sheet picker on mobile</div>
+    </section>
+
+    <!-- ══ SLIDER ══ -->
+    <section class="section" id="slider">
+      <h2 class="section-title">Slider</h2>
+      <div class="sub">
+        <div class="sub-title">Slider (single thumb, 60%)</div>
+        <div class="slider-single-wrap">
+          <div class="slider-single-track">
+            <div class="slider-single-rail"></div>
+            <div class="slider-single-fill" style="width:60%"></div>
+            <div class="slider-single-thumb" style="left:60%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">SliderField with label + value output</div>
+        <div class="slider-single-wrap">
+          <div class="slider-single-header">
+            <span class="slider-single-label">Maximum Distance</span>
+            <span class="slider-single-val">25</span>
+          </div>
+          <div class="slider-single-track">
+            <div class="slider-single-rail"></div>
+            <div class="slider-single-fill" style="width:25%"></div>
+            <div class="slider-single-thumb" style="left:25%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Disabled</div>
+        <div class="slider-single-wrap" style="opacity:0.4">
+          <div class="slider-single-track">
+            <div class="slider-single-rail"></div>
+            <div class="slider-single-fill" style="width:40%"></div>
+            <div class="slider-single-thumb" style="left:40%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="note">height 40 · thumb 20×20 white + 2px brand-500 border · fill = brand-500</div>
+    </section>
+
+    <!-- ══ FIELDSET ══ -->
+    <section class="section" id="fieldset">
+      <h2 class="section-title">Fieldset / Form / Field</h2>
+      <div class="sub">
+        <div class="sub-title">Form with fields, labels, description, error</div>
+        <div class="fieldset-group">
+          <!-- Field with label -->
+          <div class="form-field">
+            <div class="field-label">First name <span class="field-required">*</span></div>
+            <div class="input-wrap" style="width:100%"><input type="text" value="Jeremiah" readonly></div>
+          </div>
+          <!-- Field with description -->
+          <div class="form-field">
+            <div class="field-label">Email</div>
+            <div class="field-desc">We'll send a confirmation to this address.</div>
+            <div class="input-wrap" style="width:100%"><input type="email" placeholder="you@example.com" style="font-style:italic;color:#9CA3AF"></div>
+          </div>
+          <!-- Field with error -->
+          <div class="form-field">
+            <div class="field-label">Phone number</div>
+            <div class="input-wrap" style="width:100%;border-color:#DC2626"><input type="text" value="not-a-number" readonly></div>
+            <div class="field-error">Please enter a valid phone number</div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Fieldset with legend</div>
+        <div class="fieldset-group">
+          <div style="font-size:20px;font-weight:600;margin-bottom:4px">Notifications</div>
+          <div class="form-field">
+            <div class="sw-row">
+              <div class="sw-track sw-on"><div class="sw-thumb"></div></div>
+              <div><div class="sw-label">New matches</div><div class="sw-desc">Get notified when you match with someone</div></div>
+            </div>
+          </div>
+          <div class="form-field">
+            <div class="sw-row">
+              <div class="sw-track sw-off"><div class="sw-thumb"></div></div>
+              <div><div class="sw-label">Messages</div><div class="sw-desc">Get notified when you receive a message</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note">Fieldset (legend + gap:16) · Field (gap:4) · Label (Inter 500) · FieldError (red-600)</div>
+    </section>
+
+    <!-- ══ NAVIGATION ══ -->
+    <section class="section" id="navigation">
+      <h2 class="section-title">Navigation</h2>
+      <div class="sub">
+        <div class="sub-title">NavigationPill · horizontal row</div>
+        <div class="nav-pill-group">
+          <div class="nav-pill sel">Discover</div>
+          <div class="nav-pill def">Near me</div>
+          <div class="nav-pill def">New</div>
+          <div class="nav-pill dis">Premium</div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">NavigationButton · column layout (icon + label)</div>
+        <div class="nav-btn-group">
+          <div class="nav-btn sel">
+            <div class="nav-btn-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#DA4570" stroke-width="2.5"/><circle cx="12" cy="12" r="3" fill="#DA4570"/></svg>
+            </div>
+            <span class="nav-btn-label">Discover</span>
+          </div>
+          <div class="nav-btn def">
+            <div class="nav-btn-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z" stroke="#9CA3AF" stroke-width="2"/></svg>
+            </div>
+            <span class="nav-btn-label">Chats</span>
+          </div>
+          <div class="nav-btn dis">
+            <div class="nav-btn-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9CA3AF" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <span class="nav-btn-label">Profile</span>
+          </div>
+        </div>
+      </div>
+      <div class="note">Pill: border-radius 100 · sel=brand-500 bg · def=transparent. Btn: sel text=brand-500 · def text=gray-500</div>
+    </section>
+
+    <!-- ══ TABS ══ -->
+    <section class="section" id="tabs">
+      <h2 class="section-title">Tabs</h2>
+      <div class="sub">
+        <div class="sub-title">TabList + Tab (underline indicator)</div>
+        <div style="max-width:360px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff">
+          <div class="tab-list">
+            <div class="tab-item sel">About</div>
+            <div class="tab-item def">Photos</div>
+            <div class="tab-item def">Prompts</div>
+            <div class="tab-item dis">Premium ✦</div>
+          </div>
+          <div class="tab-panel" style="padding:16px">
+            <div style="font-size:14px;color:var(--gray-600)">Tab panel content is rendered here for the active tab.</div>
+          </div>
+        </div>
+      </div>
+      <div class="note">Tab: padding 12v/16h · selected: border-bottom 2px brand-500 + brand-500 text 600 · unselected: gray-600</div>
+    </section>
+
+    <!-- ══ PAGINATION ══ -->
+    <section class="section" id="pagination">
+      <h2 class="section-title">Pagination</h2>
+      <div class="sub">
+        <div class="sub-title">Page 3 of 10</div>
+        <div class="pag-wrap">
+          <span class="pag-arrow">‹</span>
+          <div class="pag-item num">1</div>
+          <div class="pag-item gap">…</div>
+          <div class="pag-item num">2</div>
+          <div class="pag-item current">3</div>
+          <div class="pag-item num">4</div>
+          <div class="pag-item gap">…</div>
+          <div class="pag-item num">10</div>
+          <span class="pag-arrow">›</span>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">Page 1 of 5 (prev disabled)</div>
+        <div class="pag-wrap">
+          <span class="pag-arrow dis">‹</span>
+          <div class="pag-item current">1</div>
+          <div class="pag-item num">2</div>
+          <div class="pag-item num">3</div>
+          <div class="pag-item gap">…</div>
+          <div class="pag-item num">5</div>
+          <span class="pag-arrow">›</span>
+        </div>
+      </div>
+      <div class="note">Item: 36×36 · border-radius 8 · current=brand-500 bg white text · arrows=brand-500</div>
+    </section>
+
+    <!-- ══ SEND LIKE SHEET ══ -->
+    <section class="section" id="sendlikesheet">
+      <h2 class="section-title">SendLikeSheet</h2>
+      <div class="sub">
+        <div class="sub-title">Empty (heart + "like" label)</div>
+        <div class="dark-sheet">
+          <div class="dark-sheet-close"><svg width="25.45" height="25.45" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#F5F5F5" stroke-width="2.545" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="dark-sheet-title">Send a like</div>
+          <div class="dark-sheet-input-row">
+            <textarea class="dark-sheet-textarea" placeholder="Personalize your message" readonly></textarea>
+            <div class="dark-sheet-send-col">
+              <div class="dark-sheet-send-btn">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M3.59 4.76a4.08 4.08 0 0 1 5.78 0L10 5.39l.63-.63a4.08 4.08 0 0 1 5.78 5.78l-.63.63L10 17 4.22 11.13l-.63-.63a4.08 4.08 0 0 1 0-5.74Z" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="dark-sheet-send-label">like</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sub">
+        <div class="sub-title">With message (arrow + "send" label)</div>
+        <div class="dark-sheet">
+          <div class="dark-sheet-close"><svg width="25.45" height="25.45" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#F5F5F5" stroke-width="2.545" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <div class="dark-sheet-title">Send a like</div>
+          <div class="dark-sheet-input-row">
+            <textarea class="dark-sheet-textarea" style="font-style:normal;color:var(--text-primary)" readonly>Love your hiking photos! Which trail is that?</textarea>
+            <div class="dark-sheet-send-col">
+              <div class="dark-sheet-send-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 19V5M5 12l7-7 7 7" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="dark-sheet-send-label">send</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note">bg #1E1E1E · border-radius 16 top · padding 24 · empty=heart icon + "like" · message=arrow icon + "send"</div>
+    </section>
+
+    <!-- ══ MATCH SHEET V2 ══ -->
+    <section class="section" id="matchsheet">
+      <h2 class="section-title">MatchSheetV2</h2>
+      <div class="sub">
+        <div class="sub-title">It's a match!</div>
+        <div class="dark-sheet">
+          <div class="dark-sheet-title">It's a match!</div>
+          <div class="dark-sheet-input-row">
+            <textarea class="dark-sheet-textarea" placeholder="Say something to Jordan" readonly></textarea>
+            <div class="dark-sheet-send-col">
+              <div class="dark-sheet-send-btn" style="opacity:0.4">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 19V5M5 12l7-7 7 7" stroke="#F5F5F5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="dark-sheet-send-label">send</span>
+            </div>
+          </div>
+          <div style="text-align:center;padding:4px 0">
+            <span style="color:#fff;font-size:16px;font-weight:600">Message Later</span>
+          </div>
+        </div>
+      </div>
+      <div class="note">Same dark sheet · no X button · send arrow always shown (dimmed until message typed) · "Message Later" link below</div>
+    </section>
+
+    <!-- ══ SETTINGS SHEETS ══ -->
+    <section class="section" id="settingssheets">
+      <div class="section-title">Settings Sheets</div>
+
+      <!-- Settings sheet -->
+      <div class="sub">
+        <div class="sub-title">Settings</div>
+        <div style="position:relative;width:393px;height:534px;background:#fff;border:1px solid #D9D9D9;border-radius:16px 16px 0 0;padding:40px;box-sizing:border-box;display:flex;flex-direction:column;gap:48px;box-shadow:0 -16px 32px -8px rgba(12,12,13,0.4)">
+          <!-- Header -->
+          <div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between">
+            <div style="width:32px"></div>
+            <span style="font-family:Inter;font-weight:600;font-size:24px;line-height:120%;letter-spacing:-0.02em;color:#1E1E1E;text-align:center">Settings</span>
+            <div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center">
+              <svg width="25.45" height="25.45" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#1E1E1E" stroke-width="2.545" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <!-- Items -->
+          <div style="display:flex;flex-direction:column;gap:48px">
+            <div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between">
+              <span style="font-family:Inter;font-size:16px;line-height:140%;color:#1E1E1E">Match Preferences</span>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#1E1E1E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between">
+              <span style="font-family:Inter;font-size:16px;line-height:140%;color:#1E1E1E">Notifications</span>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#1E1E1E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between">
+              <span style="font-family:Inter;font-size:16px;line-height:140%;color:#1E1E1E">Account</span>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#1E1E1E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between">
+              <span style="font-family:Inter;font-size:16px;line-height:140%;color:#1E1E1E">Privacy Policy</span>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke="#1E1E1E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:24px">
+              <div style="text-align:center"><span style="font-family:Inter;font-size:16px;line-height:140%;color:#EC221F;text-decoration:underline">Delete Account</span></div>
+              <div class="btn btn-md btn-primary" style="text-align:center">Log out</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Notifications sheet -->
+      <div class="sub">
+        <div class="sub-title">Notifications Sheet</div>
+        <div style="position:relative;width:393px;background:#fff;border:1px solid #D9D9D9;border-radius:16px 16px 0 0;padding:40px;box-sizing:border-box;display:flex;flex-direction:column;gap:48px;box-shadow:0 -16px 32px -8px rgba(12,12,13,0.4)">
+          <!-- Header -->
+          <div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between">
+            <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="#1E1E1E" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <span style="font-family:Inter;font-weight:600;font-size:24px;line-height:120%;letter-spacing:-0.02em;color:#1E1E1E;text-align:center">Notifications</span>
+            <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#1E1E1E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <!-- Toggle rows -->
+          <div style="display:flex;flex-direction:column;gap:48px">
+            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:24px">
+              <div style="flex:1">
+                <div style="font-family:Inter;font-weight:600;font-size:16px;line-height:140%;color:#1E1E1E">New matches</div>
+                <div style="font-family:Inter;font-size:14px;line-height:140%;color:#757575">When someone you liked also likes you back</div>
+              </div>
+              <!-- Switch off state -->
+              <div style="width:44px;height:24px;background:#E5E7EB;border-radius:12px;position:relative;margin-top:1px;flex-shrink:0">
+                <div style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.2)"></div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:row;align-items:flex-start;gap:24px">
+              <div style="flex:1">
+                <div style="font-family:Inter;font-weight:600;font-size:16px;line-height:140%;color:#1E1E1E">New messages</div>
+                <div style="font-family:Inter;font-size:14px;line-height:140%;color:#757575">When a match sends you a message</div>
+              </div>
+              <div style="width:44px;height:24px;background:#E5E7EB;border-radius:12px;position:relative;margin-top:1px;flex-shrink:0">
+                <div style="position:absolute;left:2px;top:2px;width:20px;height:20px;background:#fff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.2)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account sheet -->
+      <div class="sub">
+        <div class="sub-title">Account Sheet</div>
+        <div style="position:relative;width:393px;background:#fff;border:1px solid #D9D9D9;border-radius:16px 16px 0 0;padding:40px;box-sizing:border-box;display:flex;flex-direction:column;gap:48px;box-shadow:0 -16px 32px -8px rgba(12,12,13,0.4)">
+          <!-- Header -->
+          <div style="display:flex;flex-direction:row;align-items:center;justify-content:space-between">
+            <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M15 19l-7-7 7-7" stroke="#1E1E1E" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <span style="font-family:Inter;font-weight:600;font-size:24px;line-height:120%;letter-spacing:-0.02em;color:#1E1E1E;text-align:center">Account</span>
+            <div style="width:24px;height:24px;display:flex;align-items:center;justify-content:center">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="#1E1E1E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+          <!-- Content: Frame 205 gap 48 -->
+          <div style="display:flex;flex-direction:column;gap:48px">
+            <!-- Frame 209: gap 34 -->
+            <div style="display:flex;flex-direction:column;gap:34px">
+              <!-- Name + Birthday -->
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <span style="font-family:Inter;font-weight:600;font-size:24px;line-height:120%;letter-spacing:-0.02em;color:#000">Kiki Vega</span>
+                <span style="font-family:Inter;font-size:16px;line-height:140%;color:#000">November 6, 1998</span>
+              </div>
+              <!-- Email row -->
+              <div style="display:flex;flex-direction:row;align-items:flex-start;gap:24px">
+                <div style="flex:1">
+                  <div style="font-family:Inter;font-weight:600;font-size:16px;line-height:140%;color:#1E1E1E">Email</div>
+                  <div style="font-family:Inter;font-size:14px;line-height:140%;color:#757575">kvega@gmail.com</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M13.06 2.06a1.875 1.875 0 1 1 2.652 2.652L5.939 14.487l-3.564.891.891-3.564L13.06 2.06Z" stroke="#79747E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <!-- Phone row -->
+              <div style="display:flex;flex-direction:row;align-items:flex-start;gap:24px">
+                <div style="flex:1">
+                  <div style="font-family:Inter;font-weight:600;font-size:16px;line-height:140%;color:#1E1E1E">Phone number</div>
+                  <div style="font-family:Inter;font-size:14px;line-height:140%;color:#757575">123-456-7890</div>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M13.06 2.06a1.875 1.875 0 1 1 2.652 2.652L5.939 14.487l-3.564.891.891-3.564L13.06 2.06Z" stroke="#79747E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <!-- Reset password -->
+              <div style="display:flex;flex-direction:row;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M19 11H5a2 2 0 00-2 2v6a2 2 0 002 2h14a2 2 0 002-2v-6a2 2 0 00-2-2z" stroke="#1E1E1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#1E1E1E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span style="font-family:Inter;font-size:16px;line-height:140%;color:#1E1E1E">Reset password</span>
+              </div>
+              <!-- Delete account -->
+              <div style="display:flex;flex-direction:row;align-items:center;gap:8px">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke="#EC221F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span style="font-family:Inter;font-size:16px;line-height:140%;color:#EC221F">Delete Account</span>
+              </div>
+            </div>
+            <!-- Log out button — centered -->
+            <div style="display:flex;justify-content:center">
+              <div class="btn btn-md btn-neutralFilled">Log out</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Active nav on scroll
+  const sections = document.querySelectorAll(".section");
+  const navItems = document.querySelectorAll(".nav-item");
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navItems.forEach(n => n.classList.remove("active"));
+        const a = document.querySelector(`.nav-item[href="#${e.target.id}"]`);
+        if (a) a.classList.add("active");
+      }
+    });
+  }, { rootMargin: "-20% 0px -70% 0px" });
+  sections.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
