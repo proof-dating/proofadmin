@@ -321,6 +321,91 @@
     .type-sheet  { background: #F0FDF4; color: #166534; }
     .type-auth   { background: #FEE2E2; color: #991B1B; }
     .type-back   { background: #F3F4F6; color: #6B7280; }
+
+    /* ── Support panel ── */
+    #panel-support { padding: 48px 32px 80px; }
+    .support-container { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+    .support-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .support-header h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.02em; }
+    .support-header p { font-size: 14px; color: #757575; margin-top: 4px; }
+
+    .support-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+    .support-stat {
+      background: #fff; border-radius: 8px; border-bottom: 2px solid #1E1E1E;
+      padding: 16px 20px; display: flex; flex-direction: column; gap: 2px; min-width: 140px;
+    }
+    .support-stat .s-label { font-size: 12px; color: #757575; font-weight: 500; }
+    .support-stat .s-value { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+
+    .support-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      font-family: inherit; font-size: 13px; font-weight: 500; padding: 6px 14px;
+      border-radius: 100px; border: 1px solid #E5E5E5; background: #fff;
+      cursor: pointer; transition: all 0.15s; color: #757575;
+    }
+    .filter-btn:hover { border-color: #1E1E1E; color: #1E1E1E; }
+    .filter-btn.active { background: #1E1E1E; color: #fff; border-color: #1E1E1E; }
+
+    .support-list { display: flex; flex-direction: column; gap: 0; border: 1px solid #E5E5E5; border-radius: 10px; overflow: hidden; background: #fff; }
+    .support-empty { padding: 48px; text-align: center; font-size: 14px; color: #B3B3B3; }
+
+    .msg-row {
+      border-bottom: 1px solid #F0F0F0; cursor: pointer; transition: background 0.1s;
+    }
+    .msg-row:last-child { border-bottom: none; }
+    .msg-row:hover { background: #FAFAFA; }
+    .msg-row.resolved { opacity: 0.5; }
+
+    .msg-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 16px 20px;
+      align-items: start;
+    }
+    .msg-left { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .msg-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .msg-name { font-size: 14px; font-weight: 600; }
+    .msg-email { font-size: 12px; color: #757575; }
+    .msg-preview { font-size: 13px; color: #757575; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+    .msg-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .msg-date { font-size: 11px; color: #B3B3B3; white-space: nowrap; }
+    .msg-unread-dot { width: 7px; height: 7px; border-radius: 50%; background: #8B1A31; }
+
+    .topic-badge {
+      display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px;
+      border-radius: 3px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .topic-account  { background: #E8F0FE; color: #1A56DB; }
+    .topic-bug      { background: #FEE2E2; color: #991B1B; }
+    .topic-match    { background: #F0FDF4; color: #166534; }
+    .topic-safety   { background: #FEF3C7; color: #92400E; }
+    .topic-billing  { background: #F3E8FF; color: #6B21A8; }
+    .topic-other    { background: #F3F4F6; color: #6B7280; }
+
+    .msg-body {
+      display: none;
+      padding: 0 20px 20px;
+      border-top: 1px solid #F0F0F0;
+      margin-top: 0;
+    }
+    .msg-body.open { display: block; }
+    .msg-body-text {
+      font-size: 14px; line-height: 1.7; color: #1E1E1E;
+      white-space: pre-wrap; word-break: break-word;
+      padding-top: 16px;
+    }
+    .msg-actions { display: flex; gap: 8px; margin-top: 16px; }
+    .msg-action-btn {
+      font-family: inherit; font-size: 12px; font-weight: 600; padding: 6px 14px;
+      border-radius: 6px; border: 1px solid #E5E5E5; background: #fff;
+      cursor: pointer; transition: all 0.15s; color: #1E1E1E;
+    }
+    .msg-action-btn:hover { background: #F3F3F3; }
+    .msg-action-btn.resolve { background: #1E1E1E; color: #fff; border-color: #1E1E1E; }
+    .msg-action-btn.resolve:hover { opacity: 0.8; }
+    .msg-action-btn.unresolve { color: #757575; }
   </style>
 </head>
 <body>
@@ -333,6 +418,7 @@
   <div class="tab" data-tab="design-system">Design System</div>
   <div class="tab" data-tab="screenshots">Screenshots</div>
   <div class="tab" data-tab="app">App Preview</div>
+  <div class="tab" data-tab="support">Support</div>
   <div style="margin-left:auto;display:flex;align-items:center;padding-right:8px">
     <button onclick="handleSignOut()" style="background:none;border:none;font-size:13px;color:#757575;cursor:pointer;padding:8px 12px;border-radius:6px;font-family:inherit" onmouseover="this.style.color='#1E1E1E'" onmouseout="this.style.color='#757575'">Sign out</button>
   </div>
@@ -383,6 +469,32 @@
     document.getElementById("app-preview-frame").src = isLocal ? "http://localhost:8081" : "app/index.html";
   })();
 </script>
+
+<!-- Support panel -->
+<div id="panel-support" class="panel">
+  <div class="support-container">
+    <div class="support-header">
+      <div>
+        <h1>Support</h1>
+        <p>Inbox from proofdating.com/support</p>
+      </div>
+      <button class="msg-action-btn" onclick="loadSupport()" style="font-size:13px;padding:8px 16px">Refresh</button>
+    </div>
+    <div class="support-stats" id="support-stats"></div>
+    <div class="support-filters" id="support-filters">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+      <button class="filter-btn" data-filter="open" onclick="setFilter('open', this)">Open</button>
+      <button class="filter-btn" data-filter="account" onclick="setFilter('account', this)">Account</button>
+      <button class="filter-btn" data-filter="bug" onclick="setFilter('bug', this)">Bug</button>
+      <button class="filter-btn" data-filter="safety" onclick="setFilter('safety', this)">Safety</button>
+      <button class="filter-btn" data-filter="billing" onclick="setFilter('billing', this)">Billing</button>
+      <button class="filter-btn" data-filter="other" onclick="setFilter('other', this)">Other</button>
+    </div>
+    <div class="support-list" id="support-list">
+      <div class="support-empty">Loading messages…</div>
+    </div>
+  </div>
+</div>
 
 <!-- Lightbox -->
 <div class="lightbox" id="lightbox">
@@ -933,6 +1045,124 @@
     if (window.__adminSb) await window.__adminSb.auth.signOut();
     window.location.href = "login.html";
   }
+
+  // ── Support inbox ──────────────────────────────────────────────────────────
+  const APP_SB = supabase.createClient(
+    "https://ltnmcufyscpryaqzpfyw.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx0bm1jdWZ5c2NwcnlhcXpwZnl3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNDgyMzYsImV4cCI6MjA4NzgyNDIzNn0.Ltq6_MENN18EzX5KpoUKRhyg6S8Jd5CJ4laNioYw82Q"
+  );
+
+  let allMessages = [];
+  let activeFilter = "all";
+
+  const TOPIC_LABELS = { account: "Account", bug: "Bug", match: "Match", safety: "Safety", billing: "Billing", other: "Other" };
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 86400000) return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (diff < 604800000) return d.toLocaleDateString([], { weekday: "short" });
+    return d.toLocaleDateString([], { month: "short", day: "numeric" });
+  }
+
+  function setFilter(filter, btn) {
+    activeFilter = filter;
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderMessages();
+  }
+
+  function renderMessages() {
+    const list = document.getElementById("support-list");
+    let msgs = allMessages;
+    if (activeFilter === "open") msgs = msgs.filter(m => !m.resolved);
+    else if (activeFilter !== "all") msgs = msgs.filter(m => m.topic === activeFilter);
+
+    if (!msgs.length) {
+      list.innerHTML = `<div class="support-empty">No messages${activeFilter !== "all" ? " in this filter" : ""}</div>`;
+      return;
+    }
+
+    list.innerHTML = msgs.map((m, i) => `
+      <div class="msg-row${m.resolved ? " resolved" : ""}" id="msg-${m.id}">
+        <div class="msg-top" onclick="toggleMsg('${m.id}')">
+          <div class="msg-left">
+            <div class="msg-meta">
+              <span class="msg-name">${escHtml(m.name)}</span>
+              <span class="msg-email">${escHtml(m.email)}</span>
+              <span class="topic-badge topic-${m.topic}">${TOPIC_LABELS[m.topic] || m.topic}</span>
+              ${m.resolved ? '<span style="font-size:11px;color:#B3B3B3;font-weight:500">Resolved</span>' : ""}
+            </div>
+            <div class="msg-preview">${escHtml(m.message)}</div>
+          </div>
+          <div class="msg-right">
+            <span class="msg-date">${formatDate(m.created_at)}</span>
+            ${!m.resolved ? '<span class="msg-unread-dot"></span>' : ""}
+          </div>
+        </div>
+        <div class="msg-body" id="body-${m.id}">
+          <div class="msg-body-text">${escHtml(m.message)}</div>
+          <div class="msg-actions">
+            <a href="mailto:${escHtml(m.email)}?subject=Re: Your Proof support request" class="msg-action-btn">Reply via email</a>
+            ${m.resolved
+              ? `<button class="msg-action-btn unresolve" onclick="setResolved('${m.id}', false)">Mark open</button>`
+              : `<button class="msg-action-btn resolve" onclick="setResolved('${m.id}', true)">Mark resolved</button>`
+            }
+          </div>
+        </div>
+      </div>
+    `).join("");
+  }
+
+  function toggleMsg(id) {
+    const body = document.getElementById("body-" + id);
+    body.classList.toggle("open");
+  }
+
+  async function setResolved(id, resolved) {
+    await APP_SB.from("support_messages").update({ resolved }).eq("id", id);
+    const msg = allMessages.find(m => m.id === id);
+    if (msg) msg.resolved = resolved;
+    renderMessages();
+    renderStats();
+  }
+
+  function renderStats() {
+    const total = allMessages.length;
+    const open = allMessages.filter(m => !m.resolved).length;
+    const safety = allMessages.filter(m => m.topic === "safety" && !m.resolved).length;
+    document.getElementById("support-stats").innerHTML = `
+      <div class="support-stat"><span class="s-label">Total</span><span class="s-value">${total}</span></div>
+      <div class="support-stat"><span class="s-label">Open</span><span class="s-value">${open}</span></div>
+      ${safety ? `<div class="support-stat" style="border-bottom-color:#D32F2F"><span class="s-label" style="color:#D32F2F">Safety ⚠</span><span class="s-value" style="color:#D32F2F">${safety}</span></div>` : ""}
+    `;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  async function loadSupport() {
+    const { data, error } = await APP_SB
+      .from("support_messages")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      document.getElementById("support-list").innerHTML =
+        `<div class="support-empty">Error loading messages. Make sure the SELECT policy is enabled in Supabase.</div>`;
+      return;
+    }
+    allMessages = data || [];
+    renderStats();
+    renderMessages();
+  }
+
+  // Load when tab is clicked
+  document.querySelector('[data-tab="support"]').addEventListener("click", () => {
+    if (!allMessages.length) loadSupport();
+  });
 </script>
 </body>
 </html>
