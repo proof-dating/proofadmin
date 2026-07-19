@@ -559,7 +559,7 @@
     return worst;
   }
 
-  function renderStats() {
+  function renderAnalyticsStats() {
     const accountDone = ACCOUNT_SETUP[ACCOUNT_SETUP.length - 1].count;
     const onboardingDone = ONBOARDING[ONBOARDING.length - 1].count;
     const cards = [
@@ -607,7 +607,7 @@
   }
 
   const accountDone = ACCOUNT_SETUP[ACCOUNT_SETUP.length - 1].count;
-  renderStats();
+  renderAnalyticsStats();
   renderFunnel("account-setup-funnel", "Account Setup", ACCOUNT_SETUP, TOTAL_SIGNUPS);
   renderFunnel("onboarding-funnel", "Onboarding", ONBOARDING, accountDone);
   document.getElementById("last-updated").textContent = new Date().toLocaleString();
